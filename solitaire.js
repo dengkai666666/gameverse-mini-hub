@@ -7,6 +7,7 @@
     const newBtn = document.getElementById('sol-new');
     const undoBtn = document.getElementById('sol-undo');
     const hintBtn = document.getElementById('sol-hint');
+    const autoBtn = document.getElementById('sol-auto');
     const scoreEl = document.getElementById('sol-score');
     const movesEl = document.getElementById('sol-moves');
     const foundationEls = [
@@ -16,7 +17,7 @@
         document.getElementById('sol-foundation-3')
     ];
 
-    if (!stockEl || !wasteEl || !tableauEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !scoreEl || !movesEl || foundationEls.some(el => !el)) return;
+    if (!stockEl || !wasteEl || !tableauEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !autoBtn || !scoreEl || !movesEl || foundationEls.some(el => !el)) return;
 
     const SUITS = ['♠', '♥', '♦', '♣'];
     const SUIT_COLOR = {
@@ -101,6 +102,74 @@
         if (!history.length) return;
         const snap = history.pop();
         restore(snap);
+    }
+
+    function autoMoveToFoundations() {
+        const lang = getLang();
+        const tr = t(lang);
+
+        let movedAny = false;
+
+        // compute a single snapshot so Undo returns to pre-auto state
+        const tryMoveOnce = () => {
+            const w = top(waste);
+            if (w) {
+                for (let i = 0; i < 4; i++) {
+                    if (canMoveToFoundation(w, i)) {
+                        foundations[i].push(waste.pop());
+                        score = Math.max(0, score + 10);
+                        moves += 1;
+                        lastMovedCardId = w.id;
+                        return true;
+                    }
+                }
+            }
+            for (let col = 0; col < 7; col++) {
+                const c = top(tableau[col]);
+                if (!c || !c.faceUp) continue;
+                for (let i = 0; i < 4; i++) {
+                    if (canMoveToFoundation(c, i)) {
+                        foundations[i].push(tableau[col].pop());
+                        revealIfNeeded(col);
+                        score = Math.max(0, score + 10);
+                        moves += 1;
+                        lastMovedCardId = c.id;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        // run auto loop
+        const before = snapshotState();
+        while (tryMoveOnce()) movedAny = true;
+
+        if (!movedAny) {
+            setStatus(tr.hintNoMoves || (lang === 'zh' ? '提示：暂无可用操作' : 'Hint: no moves'));
+            return;
+        }
+
+        history.push(before);
+        if (history.length > HISTORY_LIMIT) history.shift();
+        undoBtn.disabled = history.length === 0;
+
+        selection = null;
+        hint = null;
+        setHud();
+        setStatus(tr.solitaireAutoMoved || (lang === 'zh' ? '已自动上基础堆' : 'Auto-moved'));
+        render();
+    }
+
+    function snapshotState() {
+        return {
+            stock: stock.map(c => ({ ...c })),
+            waste: waste.map(c => ({ ...c })),
+            foundations: foundations.map(p => p.map(c => ({ ...c }))),
+            tableau: tableau.map(p => p.map(c => ({ ...c }))),
+            score,
+            moves
+        };
     }
 
     function rankLabel(rank) {
@@ -574,6 +643,7 @@
     }
     newBtn.addEventListener('click', dealNewGame);
     undoBtn.addEventListener('click', undo);
+    autoBtn.addEventListener('click', autoMoveToFoundations);
 
     function computeHint() {
         const lang = getLang();
@@ -641,6 +711,29 @@
         if (!checkWin()) setStatus(tr.solitaireReady || (lang === 'zh' ? '准备就绪' : 'Ready'));
         setHud();
         render();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (key === 'Escape') {
+            clearSelection();
+            return;
+        }
+        if (key === 'd' || key === 'D') {
+            drawFromStock();
+            return;
+        }
+        if (key === 'u' || key === 'U') {
+            undo();
+            return;
+        }
+        if (key === 'h' || key === 'H') {
+            hintBtn.click();
+            return;
+        }
+        if (key === 'a' || key === 'A') {
+            autoMoveToFoundations();
+        }
     });
 
     dealNewGame();
