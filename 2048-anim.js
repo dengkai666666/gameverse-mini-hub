@@ -5,6 +5,8 @@
     const hintArrowEl = document.getElementById('g2048-hint-arrow');
     const scoreEl = document.getElementById('g2048-score');
     const bestEl = document.getElementById('g2048-best');
+    const movesEl = document.getElementById('g2048-moves');
+    const maxEl = document.getElementById('g2048-max');
     const statusEl = document.getElementById('g2048-status');
     const newBtn = document.getElementById('g2048-new');
     const undoBtn = document.getElementById('g2048-undo');
@@ -16,7 +18,7 @@
     const keepBtn = document.getElementById('g2048-keep');
     const restartBtn = document.getElementById('g2048-restart');
 
-    if (!boardEl || !tilesEl || !hintArrowEl || !scoreEl || !bestEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !overlayEl || !overlayTitleEl || !overlayBodyEl || !keepBtn || !restartBtn) {
+    if (!boardEl || !tilesEl || !hintArrowEl || !scoreEl || !bestEl || !movesEl || !maxEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !overlayEl || !overlayTitleEl || !overlayBodyEl || !keepBtn || !restartBtn) {
         return;
     }
 
@@ -68,8 +70,14 @@
         const lang = getLang();
         const tr = t(lang);
         const best = readBest();
+        let maxTile = 0;
+        for (const tile of tiles.values()) {
+            if (tile.value > maxTile) maxTile = tile.value;
+        }
         scoreEl.textContent = format(tr.scoreLabel || (lang === 'zh' ? '得分：{score}' : 'Score: {score}'), { score });
         bestEl.textContent = format(tr.bestLabel || (lang === 'zh' ? '最高分：{score}' : 'Best: {score}'), { score: best });
+        movesEl.textContent = format(tr.movesLabel || (lang === 'zh' ? '步数：{moves}' : 'Moves: {moves}'), { moves });
+        maxEl.textContent = format(tr.maxTileLabel || (lang === 'zh' ? '最大：{tile}' : 'Max: {tile}'), { tile: maxTile || 0 });
     }
 
     function setUndoState() {
