@@ -112,6 +112,23 @@ body.dark-theme .game-status {
     padding: 1rem;
 }
 
+.howto-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+}
+
+.howto {
+    list-style: disc;
+    padding-left: 1.2rem;
+    color: var(--grey-color);
+    line-height: 1.8;
+}
+
+.howto li {
+    margin: 0.35rem 0;
+}
+
 body.dark-theme .game-panel {
     background: rgba(162, 155, 254, 0.07);
     border-color: rgba(162, 155, 254, 0.18);
