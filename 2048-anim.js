@@ -2,6 +2,7 @@
 (function() {
     const boardEl = document.getElementById('g2048-board');
     const tilesEl = document.getElementById('g2048-tiles');
+    const hintArrowEl = document.getElementById('g2048-hint-arrow');
     const scoreEl = document.getElementById('g2048-score');
     const bestEl = document.getElementById('g2048-best');
     const statusEl = document.getElementById('g2048-status');
@@ -15,7 +16,7 @@
     const keepBtn = document.getElementById('g2048-keep');
     const restartBtn = document.getElementById('g2048-restart');
 
-    if (!boardEl || !tilesEl || !scoreEl || !bestEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !overlayEl || !overlayTitleEl || !overlayBodyEl || !keepBtn || !restartBtn) {
+    if (!boardEl || !tilesEl || !hintArrowEl || !scoreEl || !bestEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !overlayEl || !overlayTitleEl || !overlayBodyEl || !keepBtn || !restartBtn) {
         return;
     }
 
@@ -36,6 +37,7 @@
     let history = [];
     let touchStart = null;
     const tileEls = new Map(); // id -> element
+    let hintTimer = null;
 
     function getLang() {
         const stored = localStorage.getItem('language');
@@ -93,6 +95,14 @@
 
     function hideOverlay() {
         overlayEl.classList.remove('show');
+    }
+
+    function clearHintUi() {
+        boardEl.classList.remove('hint', 'hint-up', 'hint-down', 'hint-left', 'hint-right');
+        if (hintTimer) {
+            clearTimeout(hintTimer);
+            hintTimer = null;
+        }
     }
 
     function computeLayout() {
@@ -272,6 +282,64 @@
         return { moved, gain, empty, maxTile, out };
     }
 
+    function evalGrid(values) {
+        const log2 = (v) => (v > 0 ? Math.log2(v) : 0);
+        let empty = 0;
+        let maxTile = 0;
+        let smooth = 0;
+        let mono = 0;
+
+        const vLog = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                const v = values[r][c];
+                if (!v) empty++;
+                if (v > maxTile) maxTile = v;
+                vLog[r][c] = log2(v);
+            }
+        }
+
+        // smoothness: adjacent differences
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                const v = vLog[r][c];
+                if (!v) continue;
+                if (r + 1 < SIZE && vLog[r + 1][c]) smooth -= Math.abs(v - vLog[r + 1][c]);
+                if (c + 1 < SIZE && vLog[r][c + 1]) smooth -= Math.abs(v - vLog[r][c + 1]);
+            }
+        }
+
+        // monotonicity (encourage rows/cols to be monotonic)
+        for (let r = 0; r < SIZE; r++) {
+            let inc = 0;
+            let dec = 0;
+            for (let c = 0; c < SIZE - 1; c++) {
+                const a = vLog[r][c];
+                const b = vLog[r][c + 1];
+                if (a > b) dec += a - b;
+                else inc += b - a;
+            }
+            mono -= Math.min(inc, dec);
+        }
+        for (let c = 0; c < SIZE; c++) {
+            let inc = 0;
+            let dec = 0;
+            for (let r = 0; r < SIZE - 1; r++) {
+                const a = vLog[r][c];
+                const b = vLog[r + 1][c];
+                if (a > b) dec += a - b;
+                else inc += b - a;
+            }
+            mono -= Math.min(inc, dec);
+        }
+
+        // put max tile in a corner (soft preference)
+        const corners = [values[0][0], values[0][SIZE - 1], values[SIZE - 1][0], values[SIZE - 1][SIZE - 1]];
+        const cornerBonus = corners.includes(maxTile) ? 1 : 0;
+
+        return { empty, maxTile, smooth, mono, cornerBonus };
+    }
+
     function bestHint() {
         const values = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
         for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) values[r][c] = grid[r][c] == null ? 0 : tiles.get(grid[r][c]).value;
@@ -281,7 +349,15 @@
         for (const d of dirs) {
             const sim = simulateMove(values, d);
             if (!sim.moved) continue;
-            const score = sim.empty * 10 + sim.gain * 0.2 + sim.maxTile * 0.001;
+            const e = evalGrid(sim.out);
+            // heuristic weights tuned for "playability"
+            const score =
+                e.empty * 2.6 +
+                sim.gain * 0.08 +
+                e.smooth * 0.25 +
+                e.mono * 0.75 +
+                e.cornerBonus * 1.2 +
+                Math.log2(Math.max(2, e.maxTile)) * 0.15;
             if (!best || score > best.score) best = { dir: d, score };
         }
         return best;
@@ -291,6 +367,7 @@
         const lang = getLang();
         const tr = t(lang);
         const hint = bestHint();
+        clearHintUi();
         if (!hint) {
             statusEl.textContent = tr.hintNoMoves || (lang === 'zh' ? '提示：没有可移动的方向' : 'Hint: no moves');
             return;
@@ -303,6 +380,9 @@
              hint.dir === 'left' ? (lang === 'zh' ? '左' : 'Left') :
              (lang === 'zh' ? '右' : 'Right'));
         statusEl.textContent = format(tr.hintTryDirection || (lang === 'zh' ? '提示：试试 {dir}' : 'Hint: try {dir}'), { dir: dirLabel });
+
+        boardEl.classList.add('hint', `hint-${hint.dir}`);
+        hintTimer = setTimeout(() => clearHintUi(), 1600);
     }
 
     function canMoveValues(values) {
@@ -415,6 +495,7 @@
 
     function applyMove(dir) {
         if (overlayEl.classList.contains('show') && won && !allowContinueAfterWin) return;
+        clearHintUi();
         const snap = snapshot();
         const res = move(dir);
         if (!res.moved) return;
