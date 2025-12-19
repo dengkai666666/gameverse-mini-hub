@@ -115,7 +115,7 @@
             const w = top(waste);
             if (w) {
                 for (let i = 0; i < 4; i++) {
-                    if (canMoveToFoundation(w, i)) {
+                    if (canMoveToFoundation(w, i) && safeToAutoMoveToFoundation(w)) {
                         foundations[i].push(waste.pop());
                         score = Math.max(0, score + 10);
                         moves += 1;
@@ -128,7 +128,7 @@
                 const c = top(tableau[col]);
                 if (!c || !c.faceUp) continue;
                 for (let i = 0; i < 4; i++) {
-                    if (canMoveToFoundation(c, i)) {
+                    if (canMoveToFoundation(c, i) && safeToAutoMoveToFoundation(c)) {
                         foundations[i].push(tableau[col].pop());
                         revealIfNeeded(col);
                         score = Math.max(0, score + 10);
@@ -222,6 +222,25 @@
         const t = top(pile);
         if (!t) return card.rank === 1;
         return t.suit === card.suit && card.rank === t.rank + 1;
+    }
+
+    function foundationTopRankBySuit(suit) {
+        for (let i = 0; i < 4; i++) {
+            const t0 = top(foundations[i]);
+            if (t0 && t0.suit === suit) return t0.rank;
+        }
+        return 0;
+    }
+
+    function safeToAutoMoveToFoundation(card) {
+        // Conservative “safe auto” rule to avoid moving cards too early.
+        // A/2 are always safe. Otherwise, only auto-move if opposite-color foundations are not far behind.
+        if (card.rank <= 2) return true;
+        const color = SUIT_COLOR[card.suit];
+        const blackMin = Math.min(foundationTopRankBySuit('♠'), foundationTopRankBySuit('♣'));
+        const redMin = Math.min(foundationTopRankBySuit('♥'), foundationTopRankBySuit('♦'));
+        const oppMin = color === 'red' ? blackMin : redMin;
+        return card.rank <= oppMin + 1;
     }
 
     function canMoveToTableau(card, col) {
@@ -650,10 +669,27 @@
         const tr = t(lang);
         hint = null;
 
+        const candidates = [];
+        const add = (weight, sourceId, target, message) => candidates.push({ weight, sourceId, target, message });
+
+        const revealBonusIfMoveFrom = (fromCol, fromIndex) => {
+            if (fromCol == null || fromIndex == null) return 0;
+            const pile = tableau[fromCol];
+            if (!pile.length) return 0;
+            let firstFaceUp = -1;
+            for (let i = 0; i < pile.length; i++) {
+                if (pile[i].faceUp) { firstFaceUp = i; break; }
+            }
+            if (firstFaceUp !== -1 && fromIndex === firstFaceUp && firstFaceUp > 0) return 12;
+            return 0;
+        };
+
         const w = top(waste);
         if (w) {
             for (let i = 0; i < 4; i++) {
-                if (canMoveToFoundation(w, i)) return { sourceId: w.id, target: { type: 'foundation', index: i }, message: tr.hintMoveToFoundation || (lang === 'zh' ? '提示：可将牌移到基础堆' : 'Hint: move to foundation') };
+                if (canMoveToFoundation(w, i) && safeToAutoMoveToFoundation(w)) {
+                    add(100, w.id, { type: 'foundation', index: i }, tr.hintMoveToFoundation || (lang === 'zh' ? '提示：可将牌移到基础堆' : 'Hint: move to foundation'));
+                }
             }
         }
 
@@ -661,14 +697,19 @@
             const c = top(tableau[col]);
             if (c && c.faceUp) {
                 for (let i = 0; i < 4; i++) {
-                    if (canMoveToFoundation(c, i)) return { sourceId: c.id, target: { type: 'foundation', index: i }, message: tr.hintMoveToFoundation || (lang === 'zh' ? '提示：可将牌移到基础堆' : 'Hint: move to foundation') };
+                    if (canMoveToFoundation(c, i) && safeToAutoMoveToFoundation(c)) {
+                        const bonus = revealBonusIfMoveFrom(col, tableau[col].length - 1);
+                        add(95 + bonus, c.id, { type: 'foundation', index: i }, tr.hintMoveToFoundation || (lang === 'zh' ? '提示：可将牌移到基础堆' : 'Hint: move to foundation'));
+                    }
                 }
             }
         }
 
         if (w) {
             for (let col = 0; col < 7; col++) {
-                if (canMoveToTableau(w, col)) return { sourceId: w.id, target: { type: 'tableau', index: col }, message: tr.hintMoveToTableau || (lang === 'zh' ? '提示：可将牌移到牌列' : 'Hint: move to tableau') };
+                if (canMoveToTableau(w, col)) {
+                    add(70, w.id, { type: 'tableau', index: col }, tr.hintMoveToTableau || (lang === 'zh' ? '提示：可将牌移到牌列' : 'Hint: move to tableau'));
+                }
             }
         }
 
@@ -682,20 +723,26 @@
                 for (let to = 0; to < 7; to++) {
                     if (to === from) continue;
                     if (canMoveToTableau(stack[0], to)) {
-                        return { sourceId: stack[0].id, target: { type: 'tableau', index: to }, message: tr.hintMoveToTableau || (lang === 'zh' ? '提示：可将牌移到牌列' : 'Hint: move to tableau') };
+                        const bonus = revealBonusIfMoveFrom(from, idx);
+                        add(60 + bonus, stack[0].id, { type: 'tableau', index: to }, tr.hintMoveToTableau || (lang === 'zh' ? '提示：可将牌移到牌列' : 'Hint: move to tableau'));
                     }
                 }
             }
         }
 
         if (stock.length) {
-            return { sourceId: null, target: { type: 'stock' }, message: tr.hintDraw || (lang === 'zh' ? '提示：从牌堆抽一张' : 'Hint: draw a card') };
-        }
-        if (waste.length) {
-            return { sourceId: null, target: { type: 'stock' }, message: tr.hintRecycle || (lang === 'zh' ? '提示：把废牌翻回牌堆' : 'Hint: recycle waste') };
+            add(30, null, { type: 'stock' }, tr.hintDraw || (lang === 'zh' ? '提示：从牌堆抽一张' : 'Hint: draw a card'));
+        } else if (waste.length) {
+            add(25, null, { type: 'stock' }, tr.hintRecycle || (lang === 'zh' ? '提示：把废牌翻回牌堆' : 'Hint: recycle waste'));
         }
 
-        return { sourceId: null, target: null, message: tr.hintNoMoves || (lang === 'zh' ? '提示：暂无可用操作' : 'Hint: no moves') };
+        if (!candidates.length) {
+            return { sourceId: null, target: null, message: tr.hintNoMoves || (lang === 'zh' ? '提示：暂无可用操作' : 'Hint: no moves') };
+        }
+
+        candidates.sort((a, b) => b.weight - a.weight);
+        const best = candidates[0];
+        return { sourceId: best.sourceId, target: best.target, message: best.message };
     }
 
     hintBtn.addEventListener('click', () => {
