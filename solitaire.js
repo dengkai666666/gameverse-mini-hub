@@ -40,6 +40,18 @@
     const HISTORY_LIMIT = 80;
     let hint = null; // { sourceId, target: {type, index} }
     let lastMovedCardId = null;
+    let suppressClickUntil = 0;
+
+    const dragState = {
+        pending: null, // {source:'waste'|'tableau', col?, index?, pointerId, startX, startY, originRect}
+        active: false,
+        pointerId: null,
+        offsetX: 0,
+        offsetY: 0,
+        target: null, // {type:'tableau'|'foundation', index}
+        layer: null,
+        cards: [] // { card, el, dx, dy }
+    };
 
     function getLang() {
         const stored = localStorage.getItem('language');
@@ -62,6 +74,10 @@
         const tr = t(lang);
         scoreEl.textContent = format(tr.scoreLabel || (lang === 'zh' ? '得分：{score}' : 'Score: {score}'), { score });
         movesEl.textContent = format(tr.movesLabel || (lang === 'zh' ? '步数：{moves}' : 'Moves: {moves}'), { moves });
+    }
+
+    function isSuppressedClick() {
+        return Date.now() < suppressClickUntil;
     }
 
     function format(str, vars) {
@@ -523,6 +539,7 @@
         for (let i = 0; i < 4; i++) {
             const fEl = foundationEls[i];
             fEl.innerHTML = '';
+            fEl.dataset.foundationIndex = String(i);
             fEl.classList.toggle('hint-target', hint && hint.target && hint.target.type === 'foundation' && hint.target.index === i);
             const c = top(foundations[i]);
             if (c) {
@@ -575,7 +592,153 @@
         lastMovedCardId = null;
     }
 
+    function clearDropHighlights() {
+        document.querySelectorAll('.sol-slot.drop-target').forEach(el => el.classList.remove('drop-target'));
+        document.querySelectorAll('.sol-card.drop-target').forEach(el => el.classList.remove('drop-target'));
+    }
+
+    function setDropTarget(target) {
+        clearDropHighlights();
+        dragState.target = target;
+        if (!target) return;
+        if (target.type === 'foundation') {
+            const el = foundationEls[target.index];
+            if (el) el.classList.add('drop-target');
+            return;
+        }
+        if (target.type === 'tableau') {
+            const slot = tableauEl.querySelector(`.sol-slot[data-col="${target.index}"]`);
+            if (slot) slot.classList.add('drop-target');
+        }
+    }
+
+    function dragCleanup() {
+        if (dragState.layer) {
+            dragState.layer.remove();
+        }
+        dragState.pending = null;
+        dragState.active = false;
+        dragState.pointerId = null;
+        dragState.offsetX = 0;
+        dragState.offsetY = 0;
+        dragState.target = null;
+        dragState.layer = null;
+        dragState.cards = [];
+        clearDropHighlights();
+    }
+
+    function startDrag(pending) {
+        const lang = getLang();
+        const tr = t(lang);
+        const source = pending.source;
+
+        hint = null;
+        setStatus('');
+
+        let stack = null;
+        if (source === 'waste') {
+            const w = top(waste);
+            if (!w) return false;
+            selection = { from: 'waste' };
+            stack = [w];
+        } else {
+            const pile = tableau[pending.col];
+            const card = pile[pending.index];
+            if (!card || !card.faceUp) return false;
+            selection = { from: 'tableau', col: pending.col, index: pending.index };
+            stack = selectedCards();
+            if (!stack) {
+                selection = null;
+                setStatus(tr.solitaireInvalidMove || (lang === 'zh' ? '这步不合法' : 'Invalid move'));
+                return false;
+            }
+        }
+
+        const layer = document.createElement('div');
+        layer.className = 'sol-drag-layer';
+        document.body.appendChild(layer);
+
+        const originRect = pending.originRect;
+        dragState.offsetX = pending.startX - originRect.left;
+        dragState.offsetY = pending.startY - originRect.top;
+        dragState.layer = layer;
+        dragState.active = true;
+        dragState.pointerId = pending.pointerId;
+
+        // create visual clones
+        dragState.cards = [];
+        for (let i = 0; i < stack.length; i++) {
+            const c = stack[i];
+            const el = renderCard(c, { selected: i === 0 });
+            el.classList.add('dragging');
+            el.style.position = 'fixed';
+            el.style.left = `${originRect.left}px`;
+            el.style.top = `${originRect.top + i * 22}px`;
+            el.style.transform = 'none';
+            el.style.zIndex = String(10000 + i);
+            layer.appendChild(el);
+            dragState.cards.push({ card: c, el, dy: i * 22 });
+        }
+
+        moveDrag(pending.startX, pending.startY);
+        return true;
+    }
+
+    function moveDrag(clientX, clientY) {
+        if (!dragState.active || !dragState.layer) return;
+        const x = clientX - dragState.offsetX;
+        const y = clientY - dragState.offsetY;
+        for (const item of dragState.cards) {
+            item.el.style.left = `${x}px`;
+            item.el.style.top = `${y + item.dy}px`;
+        }
+
+        // detect drop target under pointer
+        const el = document.elementFromPoint(clientX, clientY);
+        if (!el) {
+            setDropTarget(null);
+            return;
+        }
+        const f = el.closest('[data-foundation-index]');
+        if (f) {
+            const idx = Number(f.dataset.foundationIndex);
+            if (Number.isFinite(idx)) setDropTarget({ type: 'foundation', index: idx });
+            else setDropTarget(null);
+            return;
+        }
+        const colEl = el.closest('.sol-col');
+        if (colEl && colEl.dataset.col != null) {
+            const col = Number(colEl.dataset.col);
+            if (Number.isFinite(col)) setDropTarget({ type: 'tableau', index: col });
+            else setDropTarget(null);
+            return;
+        }
+        setDropTarget(null);
+    }
+
+    function finishDrag() {
+        const target = dragState.target;
+        const wasActive = dragState.active;
+        dragCleanup();
+
+        if (!wasActive) return;
+
+        let ok = false;
+        if (target) {
+            if (target.type === 'foundation') ok = moveSelectionToFoundation(target.index);
+            else if (target.type === 'tableau') ok = moveSelectionToTableau(target.index);
+        }
+
+        // If the move failed, just clear selection and re-render.
+        if (!ok) {
+            clearSelection();
+        }
+
+        suppressClickUntil = Date.now() + 350;
+    }
+
     function onWasteClick(e) {
+        if (isSuppressedClick()) return;
         const w = top(waste);
         if (!w) return;
         const isSelected = selection && selection.from === 'waste';
@@ -589,6 +752,7 @@
     }
 
     function onTableauClick(e) {
+        if (isSuppressedClick()) return;
         const cardEl = e.target.closest('.sol-card');
         const colEl = e.target.closest('.sol-col');
         if (!colEl) return;
@@ -782,6 +946,84 @@
             autoMoveToFoundations();
         }
     });
+
+    function onPointerDownOnCard(e, source) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        if (dragState.pending || dragState.active) return;
+
+        const cardEl = e.target.closest('.sol-card');
+        if (!cardEl) return;
+
+        if (source === 'waste') {
+            // only top waste card
+            if (cardEl.parentElement !== wasteEl) return;
+            if (!waste.length) return;
+        } else {
+            const col = Number(cardEl.dataset.col);
+            const idx = Number(cardEl.dataset.index);
+            if (!Number.isFinite(col) || !Number.isFinite(idx)) return;
+            const card = tableau[col] && tableau[col][idx];
+            if (!card || !card.faceUp) return;
+        }
+
+        const rect = cardEl.getBoundingClientRect();
+        dragState.pending = {
+            source,
+            col: source === 'tableau' ? Number(cardEl.dataset.col) : null,
+            index: source === 'tableau' ? Number(cardEl.dataset.index) : null,
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            originRect: rect
+        };
+
+        document.addEventListener('pointermove', onPointerMove, { passive: false });
+        document.addEventListener('pointerup', onPointerUp, { passive: false });
+        document.addEventListener('pointercancel', onPointerUp, { passive: false });
+    }
+
+    function onPointerMove(e) {
+        if (!dragState.pending && !dragState.active) return;
+        if (dragState.pending && e.pointerId !== dragState.pending.pointerId) return;
+        if (dragState.active && e.pointerId !== dragState.pointerId) return;
+
+        if (dragState.pending && !dragState.active) {
+            const dx = e.clientX - dragState.pending.startX;
+            const dy = e.clientY - dragState.pending.startY;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 8) return;
+            e.preventDefault();
+            const ok = startDrag(dragState.pending);
+            dragState.pending = null;
+            if (!ok) {
+                document.removeEventListener('pointermove', onPointerMove);
+                document.removeEventListener('pointerup', onPointerUp);
+                document.removeEventListener('pointercancel', onPointerUp);
+            }
+            return;
+        }
+
+        if (dragState.active) {
+            e.preventDefault();
+            moveDrag(e.clientX, e.clientY);
+        }
+    }
+
+    function onPointerUp(e) {
+        if (dragState.pending && e.pointerId === dragState.pending.pointerId) {
+            dragState.pending = null;
+        }
+        if (dragState.active && e.pointerId === dragState.pointerId) {
+            e.preventDefault();
+            finishDrag();
+        }
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointercancel', onPointerUp);
+    }
+
+    wasteEl.addEventListener('pointerdown', (e) => onPointerDownOnCard(e, 'waste'));
+    tableauEl.addEventListener('pointerdown', (e) => onPointerDownOnCard(e, 'tableau'));
 
     dealNewGame();
 })();
