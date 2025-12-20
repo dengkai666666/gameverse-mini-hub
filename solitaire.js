@@ -1816,17 +1816,34 @@
             }
         }
 
+        // Flip a newly-uncovered face-down top card (meaningful progress).
+        for (let col = 0; col < 7; col++) {
+            const c = top(tableau[col]);
+            if (c && !c.faceUp) {
+                const msg = format(
+                    tr.hintFlipTopCard || (lang === 'zh' ? '提示：翻开第 {col} 列最上面的暗牌' : 'Hint: flip the top face-down card in column {col}'),
+                    { col: col + 1 }
+                );
+                add(85, c.id, { type: 'tableau', index: col }, msg, c.id);
+            }
+        }
+
         if (w) {
             for (let col = 0; col < 7; col++) {
                 if (canMoveToTableau(w, col)) {
                     const pileTop = top(tableau[col]);
                     const targetCardId = pileTop && pileTop.faceUp ? pileTop.id : null;
                     const dest = tableauTargetLabel(col);
+                    const colNum = col + 1;
                     const msg = format(
                         pileTop
-                            ? (tr.hintMoveToTableauDetail || (lang === 'zh' ? '提示：将 {card} 移到 {dest} 上' : 'Hint: move {card} onto {dest}'))
-                            : (tr.hintMoveToTableauEmptyDetail || (lang === 'zh' ? '提示：将 {card} 移到空列' : 'Hint: move {card} to an empty column')),
-                        { card: cardLabel(w), dest }
+                            ? (tr.hintMoveToTableauDetailCol ||
+                                tr.hintMoveToTableauDetail ||
+                                (lang === 'zh' ? '提示：将 {card} 移到 {dest} 上（第 {col} 列）' : 'Hint: move {card} onto {dest} (Column {col})'))
+                            : (tr.hintMoveToTableauEmptyDetailCol ||
+                                tr.hintMoveToTableauEmptyDetail ||
+                                (lang === 'zh' ? '提示：将 {card} 移到空列（第 {col} 列）' : 'Hint: move {card} to an empty column (Column {col})')),
+                        { card: cardLabel(w), dest, col: colNum }
                     );
                     add(70, w.id, { type: 'tableau', index: col }, msg, targetCardId);
                 }
@@ -1859,11 +1876,16 @@
                         const toTop = top(tableau[to]);
                         const targetCardId = toTop && toTop.faceUp ? toTop.id : null;
                         const dest = tableauTargetLabel(to);
+                        const colNum = to + 1;
                         const msg = format(
                             toTop
-                                ? (tr.hintMoveToTableauDetail || (lang === 'zh' ? '提示：将 {card} 移到 {dest} 上' : 'Hint: move {card} onto {dest}'))
-                                : (tr.hintMoveToTableauEmptyDetail || (lang === 'zh' ? '提示：将 {card} 移到空列' : 'Hint: move {card} to an empty column')),
-                            { card: cardLabel(stack[0]), dest }
+                                ? (tr.hintMoveToTableauDetailCol ||
+                                    tr.hintMoveToTableauDetail ||
+                                    (lang === 'zh' ? '提示：将 {card} 移到 {dest} 上（第 {col} 列）' : 'Hint: move {card} onto {dest} (Column {col})'))
+                                : (tr.hintMoveToTableauEmptyDetailCol ||
+                                    tr.hintMoveToTableauEmptyDetail ||
+                                    (lang === 'zh' ? '提示：将 {card} 移到空列（第 {col} 列）' : 'Hint: move {card} to an empty column (Column {col})')),
+                            { card: cardLabel(stack[0]), dest, col: colNum }
                         );
                         add(60 + bonus, stack[0].id, { type: 'tableau', index: to }, msg, targetCardId);
                     }
