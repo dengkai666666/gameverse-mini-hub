@@ -1390,6 +1390,9 @@
     }
 
     function render() {
+        const selectionStack = selectedCards();
+        const selectionTargets = selectionStack ? computeValidTargetsForStack(selectionStack) : null;
+
         // stock
         stockEl.innerHTML = '';
         stockEl.classList.toggle('hint-target', hint && hint.target && hint.target.type === 'stock');
@@ -1419,6 +1422,7 @@
             fEl.innerHTML = '';
             fEl.dataset.foundationIndex = String(i);
             fEl.classList.toggle('hint-target', hint && hint.target && hint.target.type === 'foundation' && hint.target.index === i);
+            fEl.classList.toggle('drop-valid', !!(selectionTargets && selectionTargets.validFoundations.has(i)));
             const c = top(foundations[i]);
             if (c) {
                 const el = renderCard(c, {});
@@ -1438,6 +1442,7 @@
             slot.className = 'sol-slot';
             slot.dataset.col = String(col);
             slot.classList.toggle('hint-target', hint && hint.target && hint.target.type === 'tableau' && hint.target.index === col);
+            slot.classList.toggle('drop-valid', !!(selectionTargets && selectionTargets.validTableau.has(col)));
             colEl.appendChild(slot);
 
             const pile = tableau[col];
@@ -1479,24 +1484,33 @@
         document.querySelectorAll('.sol-slot.drop-valid').forEach(el => el.classList.remove('drop-valid'));
     }
 
-    function setDragValidTargets(stack) {
-        dragState.validTableau = new Set();
-        dragState.validFoundations = new Set();
-        if (!stack || !stack.length) return;
+    function computeValidTargetsForStack(stack) {
+        const validTableau = new Set();
+        const validFoundations = new Set();
+        if (!stack || !stack.length) return { validTableau, validFoundations };
 
         const card = stack[0];
         for (let col = 0; col < 7; col++) {
-            if (canMoveToTableau(card, col)) dragState.validTableau.add(col);
+            if (canMoveToTableau(card, col)) validTableau.add(col);
         }
 
         let canFoundation = stack.length === 1;
         if (canFoundation && selection && selection.from === 'tableau') {
             canFoundation = selection.index === tableau[selection.col].length - 1;
         }
-        if (!canFoundation) return;
-        for (let i = 0; i < 4; i++) {
-            if (canMoveToFoundation(card, i)) dragState.validFoundations.add(i);
+        if (canFoundation) {
+            for (let i = 0; i < 4; i++) {
+                if (canMoveToFoundation(card, i)) validFoundations.add(i);
+            }
         }
+
+        return { validTableau, validFoundations };
+    }
+
+    function setDragValidTargets(stack) {
+        const targets = computeValidTargetsForStack(stack);
+        dragState.validTableau = targets.validTableau;
+        dragState.validFoundations = targets.validFoundations;
     }
 
     function applyValidDropHighlights() {
