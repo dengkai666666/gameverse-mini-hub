@@ -107,6 +107,8 @@
         offsetX: 0,
         offsetY: 0,
         target: null, // {type:'tableau'|'foundation', index}
+        validTableau: null, // Set<number>
+        validFoundations: null, // Set<number>
         layer: null,
         cards: [] // { card, el, dx, dy }
     };
@@ -1468,13 +1470,53 @@
         lastMovedCardId = null;
     }
 
-    function clearDropHighlights() {
+    function clearDropTargetHighlight() {
         document.querySelectorAll('.sol-slot.drop-target').forEach(el => el.classList.remove('drop-target'));
         document.querySelectorAll('.sol-card.drop-target').forEach(el => el.classList.remove('drop-target'));
     }
 
+    function clearValidDropHighlights() {
+        document.querySelectorAll('.sol-slot.drop-valid').forEach(el => el.classList.remove('drop-valid'));
+    }
+
+    function setDragValidTargets(stack) {
+        dragState.validTableau = new Set();
+        dragState.validFoundations = new Set();
+        if (!stack || !stack.length) return;
+
+        const card = stack[0];
+        for (let col = 0; col < 7; col++) {
+            if (canMoveToTableau(card, col)) dragState.validTableau.add(col);
+        }
+
+        let canFoundation = stack.length === 1;
+        if (canFoundation && selection && selection.from === 'tableau') {
+            canFoundation = selection.index === tableau[selection.col].length - 1;
+        }
+        if (!canFoundation) return;
+        for (let i = 0; i < 4; i++) {
+            if (canMoveToFoundation(card, i)) dragState.validFoundations.add(i);
+        }
+    }
+
+    function applyValidDropHighlights() {
+        clearValidDropHighlights();
+        if (dragState.validFoundations) {
+            dragState.validFoundations.forEach((i) => {
+                const el = foundationEls[i];
+                if (el) el.classList.add('drop-valid');
+            });
+        }
+        if (dragState.validTableau) {
+            dragState.validTableau.forEach((col) => {
+                const slot = tableauEl.querySelector(`.sol-slot[data-col="${col}"]`);
+                if (slot) slot.classList.add('drop-valid');
+            });
+        }
+    }
+
     function setDropTarget(target) {
-        clearDropHighlights();
+        clearDropTargetHighlight();
         dragState.target = target;
         if (!target) return;
         if (target.type === 'foundation') {
@@ -1498,9 +1540,12 @@
         dragState.offsetX = 0;
         dragState.offsetY = 0;
         dragState.target = null;
+        dragState.validTableau = null;
+        dragState.validFoundations = null;
         dragState.layer = null;
         dragState.cards = [];
-        clearDropHighlights();
+        clearDropTargetHighlight();
+        clearValidDropHighlights();
     }
 
     function startDrag(pending) {
@@ -1531,6 +1576,8 @@
             }
         }
 
+        setDragValidTargets(stack);
+
         const layer = document.createElement('div');
         layer.className = 'sol-drag-layer';
         document.body.appendChild(layer);
@@ -1557,6 +1604,7 @@
             dragState.cards.push({ card: c, el, dy: i * 22 });
         }
 
+        applyValidDropHighlights();
         moveDrag(pending.startX, pending.startY);
         return true;
     }
@@ -1579,15 +1627,21 @@
         const f = el.closest('[data-foundation-index]');
         if (f) {
             const idx = Number(f.dataset.foundationIndex);
-            if (Number.isFinite(idx)) setDropTarget({ type: 'foundation', index: idx });
-            else setDropTarget(null);
+            if (Number.isFinite(idx) && dragState.validFoundations && dragState.validFoundations.has(idx)) {
+                setDropTarget({ type: 'foundation', index: idx });
+            } else {
+                setDropTarget(null);
+            }
             return;
         }
         const colEl = el.closest('.sol-col');
         if (colEl && colEl.dataset.col != null) {
             const col = Number(colEl.dataset.col);
-            if (Number.isFinite(col)) setDropTarget({ type: 'tableau', index: col });
-            else setDropTarget(null);
+            if (Number.isFinite(col) && dragState.validTableau && dragState.validTableau.has(col)) {
+                setDropTarget({ type: 'tableau', index: col });
+            } else {
+                setDropTarget(null);
+            }
             return;
         }
         setDropTarget(null);
@@ -1606,10 +1660,8 @@
             else if (target.type === 'tableau') ok = moveSelectionToTableau(target.index);
         }
 
-        // If the move failed, just clear selection and re-render.
-        if (!ok) {
-            clearSelection();
-        }
+        // If the move failed, keep selection so the player can try another target (like click-to-move).
+        if (!ok) render();
 
         suppressClickUntil = Date.now() + 350;
     }
