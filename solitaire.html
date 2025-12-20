@@ -54,6 +54,7 @@
                     <button type="button" class="btn" id="sol-undo" data-key="undo" disabled>Undo</button>
                     <button type="button" class="btn" id="sol-hint" data-key="hint">Hint</button>
                     <button type="button" class="btn" id="sol-auto" data-key="autoMove">Auto</button>
+                    <button type="button" class="btn" id="sol-guide" data-key="guide">Guide</button>
                 </div>
                 <div id="sol-status" class="game-status" aria-live="polite"></div>
             </div>
@@ -108,5 +109,22 @@
     <script src="fallback-translations.js" charset="UTF-8"></script>
     <script src="script.js" charset="UTF-8"></script>
     <script src="solitaire.js" charset="UTF-8"></script>
+
+    <div id="sol-tutorial" class="sol-tutorial" hidden aria-hidden="true">
+        <div class="sol-tutorial-backdrop"></div>
+        <div id="sol-tutorial-popover" class="sol-tutorial-popover" role="dialog" aria-modal="true" aria-label="Solitaire tutorial">
+            <div id="sol-tutorial-step" class="sol-tutorial-step"></div>
+            <label class="sol-tutorial-checkbox">
+                <input id="sol-tutorial-dontshow" type="checkbox">
+                <span data-key="dontShowAgain">Don’t show again</span>
+            </label>
+            <div class="sol-tutorial-actions">
+                <button type="button" class="btn" id="sol-tutorial-skip" data-key="skip">Skip</button>
+                <div class="sol-tutorial-spacer"></div>
+                <button type="button" class="btn" id="sol-tutorial-back" data-key="back" disabled>Back</button>
+                <button type="button" class="btn primary-btn" id="sol-tutorial-next" data-key="next">Next</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

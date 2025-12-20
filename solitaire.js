@@ -8,6 +8,7 @@
     const undoBtn = document.getElementById('sol-undo');
     const hintBtn = document.getElementById('sol-hint');
     const autoBtn = document.getElementById('sol-auto');
+    const guideBtn = document.getElementById('sol-guide');
     const scoreEl = document.getElementById('sol-score');
     const movesEl = document.getElementById('sol-moves');
     const foundationEls = [
@@ -17,7 +18,29 @@
         document.getElementById('sol-foundation-3')
     ];
 
-    if (!stockEl || !wasteEl || !tableauEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !autoBtn || !scoreEl || !movesEl || foundationEls.some(el => !el)) return;
+    if (!stockEl || !wasteEl || !tableauEl || !statusEl || !newBtn || !undoBtn || !hintBtn || !autoBtn || !guideBtn || !scoreEl || !movesEl || foundationEls.some(el => !el)) return;
+
+    const TUTORIAL_SEEN_KEY = 'solitaireTutorialSeen';
+    const tutorialEl = document.getElementById('sol-tutorial');
+    const tutorialPopoverEl = document.getElementById('sol-tutorial-popover');
+    const tutorialStepEl = document.getElementById('sol-tutorial-step');
+    const tutorialDontShowEl = document.getElementById('sol-tutorial-dontshow');
+    const tutorialSkipBtn = document.getElementById('sol-tutorial-skip');
+    const tutorialBackBtn = document.getElementById('sol-tutorial-back');
+    const tutorialNextBtn = document.getElementById('sol-tutorial-next');
+
+    const tutorial = {
+        open: false,
+        step: 0,
+        steps: [
+            { key: 'solTutWelcome', target: null },
+            { key: 'solTutStock', target: '#sol-stock' },
+            { key: 'solTutWaste', target: '#sol-waste' },
+            { key: 'solTutFoundations', target: '#sol-foundation-0' },
+            { key: 'solTutTableau', target: '#sol-tableau' },
+            { key: 'solTutTip', target: '#sol-hint' }
+        ]
+    };
 
     const SUITS = ['♠', '♥', '♦', '♣'];
     const SUIT_COLOR = {
@@ -65,6 +88,12 @@
         return {};
     }
 
+    function tt(key, fallback) {
+        const lang = getLang();
+        const tr = t(lang);
+        return tr[key] || fallback || key;
+    }
+
     function setStatus(text) {
         statusEl.textContent = text || '';
     }
@@ -74,6 +103,106 @@
         const tr = t(lang);
         scoreEl.textContent = format(tr.scoreLabel || (lang === 'zh' ? '得分：{score}' : 'Score: {score}'), { score });
         movesEl.textContent = format(tr.movesLabel || (lang === 'zh' ? '步数：{moves}' : 'Moves: {moves}'), { moves });
+    }
+
+    function clearTutorialHighlight() {
+        document.querySelectorAll('.sol-tut-highlight').forEach(el => el.classList.remove('sol-tut-highlight'));
+    }
+
+    function showTutorial(open, force) {
+        if (!tutorialEl || !tutorialPopoverEl || !tutorialStepEl || !tutorialDontShowEl || !tutorialSkipBtn || !tutorialBackBtn || !tutorialNextBtn) {
+            return;
+        }
+        if (!force && localStorage.getItem(TUTORIAL_SEEN_KEY) === '1') return;
+
+        tutorial.open = open;
+        if (!open) {
+            tutorialEl.hidden = true;
+            tutorialEl.setAttribute('aria-hidden', 'true');
+            clearTutorialHighlight();
+            return;
+        }
+
+        tutorialEl.hidden = false;
+        tutorialEl.setAttribute('aria-hidden', 'false');
+        tutorial.step = 0;
+        tutorialDontShowEl.checked = localStorage.getItem(TUTORIAL_SEEN_KEY) === '1';
+        renderTutorialStep();
+    }
+
+    function closeTutorial(markSeen) {
+        if (markSeen) localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
+        if (tutorialDontShowEl && tutorialDontShowEl.checked) localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
+        showTutorial(false, true);
+    }
+
+    function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+    }
+
+    function positionTutorialPopover(targetEl) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const margin = 12;
+
+        const pop = tutorialPopoverEl;
+        pop.style.left = '0px';
+        pop.style.top = '0px';
+        pop.style.setProperty('--arrow-left', '50%');
+
+        const popRect = pop.getBoundingClientRect();
+        let x = vw / 2 - popRect.width / 2;
+        let y = vh / 2 - popRect.height / 2;
+        let pos = 'bottom';
+        let arrowLeft = popRect.width / 2;
+
+        if (targetEl) {
+            const r = targetEl.getBoundingClientRect();
+            const preferBottom = r.top < vh * 0.52;
+            pos = preferBottom ? 'bottom' : 'top';
+            const cx = r.left + r.width / 2;
+            x = cx - popRect.width / 2;
+            if (pos === 'bottom') y = r.bottom + 12;
+            else y = r.top - popRect.height - 12;
+
+            x = clamp(x, margin, vw - popRect.width - margin);
+            y = clamp(y, margin, vh - popRect.height - margin);
+            arrowLeft = clamp(cx - x, 18, popRect.width - 18);
+        }
+
+        pop.dataset.pos = pos;
+        pop.style.left = `${x}px`;
+        pop.style.top = `${y}px`;
+        pop.style.setProperty('--arrow-left', `${arrowLeft}px`);
+    }
+
+    function renderTutorialStep() {
+        if (!tutorial.open) return;
+        const s = tutorial.steps[tutorial.step];
+        tutorialStepEl.textContent = tt(s.key, '');
+
+        clearTutorialHighlight();
+        const targetEl = s.target ? document.querySelector(s.target) : null;
+        if (targetEl) targetEl.classList.add('sol-tut-highlight');
+
+        tutorialBackBtn.disabled = tutorial.step === 0;
+        const isLast = tutorial.step === tutorial.steps.length - 1;
+        tutorialNextBtn.textContent = tt(isLast ? 'done' : 'next', isLast ? 'Done' : 'Next');
+        if (isLast) {
+            tutorialNextBtn.dataset.key = 'done';
+        } else {
+            tutorialNextBtn.dataset.key = 'next';
+        }
+
+        // mark seen after the first time it pops automatically
+        if (localStorage.getItem(TUTORIAL_SEEN_KEY) !== '1') {
+            localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
+        }
+
+        // position after layout
+        requestAnimationFrame(() => {
+            positionTutorialPopover(targetEl);
+        });
     }
 
     function isSuppressedClick() {
@@ -827,6 +956,7 @@
     newBtn.addEventListener('click', dealNewGame);
     undoBtn.addEventListener('click', undo);
     autoBtn.addEventListener('click', autoMoveToFoundations);
+    guideBtn.addEventListener('click', () => showTutorial(true, true));
 
     function computeHint() {
         const lang = getLang();
@@ -923,6 +1053,32 @@
         setHud();
         render();
     });
+
+    if (tutorialEl && tutorialSkipBtn && tutorialBackBtn && tutorialNextBtn) {
+        tutorialSkipBtn.addEventListener('click', () => closeTutorial(true));
+        tutorialBackBtn.addEventListener('click', () => {
+            tutorial.step = Math.max(0, tutorial.step - 1);
+            renderTutorialStep();
+        });
+        tutorialNextBtn.addEventListener('click', () => {
+            const isLast = tutorial.step === tutorial.steps.length - 1;
+            if (isLast) {
+                closeTutorial(true);
+                return;
+            }
+            tutorial.step = Math.min(tutorial.steps.length - 1, tutorial.step + 1);
+            renderTutorialStep();
+        });
+        tutorialEl.addEventListener('click', (e) => {
+            if (e.target && e.target.classList.contains('sol-tutorial-backdrop')) closeTutorial(true);
+        });
+        window.addEventListener('resize', () => {
+            if (!tutorial.open) return;
+            const s = tutorial.steps[tutorial.step];
+            const targetEl = s.target ? document.querySelector(s.target) : null;
+            positionTutorialPopover(targetEl);
+        });
+    }
 
     document.addEventListener('keydown', (e) => {
         const key = e.key;
@@ -1026,4 +1182,6 @@
     tableauEl.addEventListener('pointerdown', (e) => onPointerDownOnCard(e, 'tableau'));
 
     dealNewGame();
+    // auto-show tutorial on first visit
+    setTimeout(() => showTutorial(true, false), 300);
 })();
