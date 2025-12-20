@@ -2018,6 +2018,8 @@
             if (key === 'Escape') closeTutorial(true);
             return;
         }
+        const tag = e.target && e.target.tagName ? String(e.target.tagName).toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) return;
         if (key === 'Escape') {
             clearSelection();
             return;

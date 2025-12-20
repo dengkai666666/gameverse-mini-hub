@@ -64,6 +64,8 @@ body.dark-theme .sol-slot {
     padding: clamp(0.34rem, 0.9vw, 0.45rem) clamp(0.40rem, 1.0vw, 0.55rem);
     user-select: none;
     cursor: pointer;
+    touch-action: none;
+    -webkit-user-drag: none;
 }
 
 .sol-drag-layer {
