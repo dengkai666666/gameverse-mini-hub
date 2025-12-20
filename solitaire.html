@@ -70,18 +70,28 @@
                         <div class="sol-top">
                             <div class="sol-piles">
                                 <div class="sol-pile-row">
-                                    <div id="sol-stock" class="sol-slot" aria-label="Stock"></div>
-                                    <div id="sol-waste" class="sol-slot" aria-label="Waste"></div>
+                                    <div class="sol-pile">
+                                        <div class="sol-pile-label" data-key="solLabelStock">Stock</div>
+                                        <div id="sol-stock" class="sol-slot" aria-label="Stock"></div>
+                                    </div>
+                                    <div class="sol-pile">
+                                        <div class="sol-pile-label" data-key="solLabelWaste">Waste</div>
+                                        <div id="sol-waste" class="sol-slot" aria-label="Waste"></div>
+                                    </div>
                                 </div>
                                 <div class="sol-msg" data-key="solitaireHint">Click stock to draw. Click a card to select, then click a destination.</div>
                             </div>
-                            <div class="sol-pile-row" style="justify-content:flex-end;">
-                                <div id="sol-foundation-0" class="sol-slot" aria-label="Foundation 1"></div>
-                                <div id="sol-foundation-1" class="sol-slot" aria-label="Foundation 2"></div>
-                                <div id="sol-foundation-2" class="sol-slot" aria-label="Foundation 3"></div>
-                                <div id="sol-foundation-3" class="sol-slot" aria-label="Foundation 4"></div>
+                            <div class="sol-foundations">
+                                <div class="sol-area-label sol-area-label-right" data-key="solLabelFoundations">Foundations</div>
+                                <div class="sol-pile-row" style="justify-content:flex-end;">
+                                    <div id="sol-foundation-0" class="sol-slot" aria-label="Foundation 1"></div>
+                                    <div id="sol-foundation-1" class="sol-slot" aria-label="Foundation 2"></div>
+                                    <div id="sol-foundation-2" class="sol-slot" aria-label="Foundation 3"></div>
+                                    <div id="sol-foundation-3" class="sol-slot" aria-label="Foundation 4"></div>
+                                </div>
                             </div>
                         </div>
+                        <div class="sol-area-label" data-key="solLabelTableau">Tableau</div>
                         <div id="sol-tableau" class="sol-tableau" aria-label="Tableau"></div>
                     </div>
                 </div>

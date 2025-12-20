@@ -33,6 +33,43 @@
     flex-wrap: wrap;
 }
 
+.sol-pile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.sol-pile-label,
+.sol-area-label {
+    color: var(--grey-color);
+    font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.sol-pile-label {
+    font-size: 0.82rem;
+}
+
+.sol-area-label {
+    margin-top: 0.15rem;
+}
+
+.sol-area-label-right {
+    width: 100%;
+    text-align: right;
+}
+
+.sol-foundations {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+}
+
 .sol-slot {
     width: var(--sol-card-w);
     height: auto;
