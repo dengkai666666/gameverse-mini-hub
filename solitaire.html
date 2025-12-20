@@ -55,6 +55,7 @@
                     <button type="button" class="btn" id="sol-hint" data-key="hint">Hint</button>
                     <button type="button" class="btn" id="sol-auto" data-key="autoMove">Auto</button>
                     <button type="button" class="btn" id="sol-guide" data-key="guide">Guide</button>
+                    <button type="button" class="btn" id="sol-demo" data-key="demo">Demo</button>
                 </div>
                 <div id="sol-status" class="game-status" aria-live="polite"></div>
             </div>
@@ -118,6 +119,19 @@
                 <div class="sol-tutorial-spacer"></div>
                 <button type="button" class="btn" id="sol-tutorial-back" data-key="back" disabled>Back</button>
                 <button type="button" class="btn primary-btn" id="sol-tutorial-next" data-key="next">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sol-demo-overlay" class="sol-demo" hidden aria-hidden="true">
+        <div class="sol-demo-backdrop"></div>
+        <div class="sol-demo-panel" role="dialog" aria-modal="true" aria-label="Solitaire demo">
+            <div id="sol-demo-caption" class="sol-demo-caption"></div>
+            <div class="sol-demo-actions">
+                <button type="button" class="btn" id="sol-demo-exit" data-key="exit">Exit</button>
+                <div class="sol-demo-spacer"></div>
+                <button type="button" class="btn" id="sol-demo-pause" data-key="pause">Pause</button>
+                <button type="button" class="btn primary-btn" id="sol-demo-play" data-key="play" hidden>Play</button>
             </div>
         </div>
     </div>
