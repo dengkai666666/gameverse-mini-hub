@@ -54,7 +54,8 @@
     const demo = {
         active: false,
         paused: false,
-        token: 0
+        token: 0,
+        caption: null // { key, fallback }
     };
     let demoSaved = null;
     let demoSavedBodyOverflow = null;
@@ -130,6 +131,7 @@
 
     function setDemoCaption(key, fallback) {
         if (!demoCaptionEl) return;
+        demo.caption = { key, fallback: fallback || '' };
         demoCaptionEl.textContent = tt(key, fallback || '');
     }
 
@@ -1517,6 +1519,11 @@
         if (!checkWin()) setStatus(tr.solitaireReady || (lang === 'zh' ? '准备就绪' : 'Ready'));
         setHud();
         render();
+
+        if (tutorial.open) renderTutorialStep();
+        if (demo.active && demo.caption && demoCaptionEl) {
+            demoCaptionEl.textContent = tt(demo.caption.key, demo.caption.fallback || '');
+        }
     });
 
     if (tutorialEl && tutorialSkipBtn && tutorialBackBtn && tutorialNextBtn) {
