@@ -97,6 +97,7 @@
     const HISTORY_LIMIT = 80;
     let hint = null; // { sourceId, target: {type, index} }
     let lastMovedCardId = null;
+    let lastMove = null; // { type, cardId?, fromCol?, toCol?, revealed?, emptied? }
     let suppressClickUntil = 0;
 
     const dragState = {
@@ -927,6 +928,7 @@
         if (!history.length) return;
         const snap = history.pop();
         restore(snap);
+        lastMove = { type: 'undo' };
     }
 
     function autoMoveToFoundations() {
@@ -1184,6 +1186,7 @@
             score = Math.max(0, score + 10);
             moves += 1;
             lastMovedCardId = card.id;
+            lastMove = { type: 'tableauToFoundation', cardId: card.id, fromCol: selection.col };
             clearSelection();
             setStatus('');
             setHud();
@@ -1202,6 +1205,7 @@
         score = Math.max(0, score + 10);
         moves += 1;
         lastMovedCardId = card.id;
+        lastMove = { type: 'wasteToFoundation', cardId: card.id };
         clearSelection();
         setStatus('');
         setHud();
@@ -1242,12 +1246,25 @@
             tableau[col].push(movedCard);
             score = Math.max(0, score + 5);
             lastMovedCardId = movedCard.id;
+            lastMove = { type: 'wasteToTableau', cardId: movedCard.id, toCol: col };
         } else {
+            const fromCol = selection.col;
             const moved = tableau[selection.col].splice(selection.index);
             tableau[col].push(...moved);
-            revealIfNeeded(selection.col);
+            const topAfterRemoval = top(tableau[fromCol]);
+            const willReveal = !!(topAfterRemoval && !topAfterRemoval.faceUp);
+            revealIfNeeded(fromCol);
+            const emptied = tableau[fromCol].length === 0;
             score = Math.max(0, score + 3);
             lastMovedCardId = moved[0] ? moved[0].id : null;
+            lastMove = {
+                type: 'tableauToTableau',
+                cardId: moved[0] ? moved[0].id : null,
+                fromCol,
+                toCol: col,
+                revealed: willReveal,
+                emptied
+            };
         }
         moves += 1;
         clearSelection();
@@ -1324,6 +1341,7 @@
             setHud();
             setStatus('');
             render();
+            lastMove = { type: 'draw', cardId: card.id };
             if (practice.active && practice.expected === 'draw') advancePracticeStep();
             return;
         }
@@ -1339,6 +1357,7 @@
         setHud();
         setStatus(tr.solitaireRecycled || (lang === 'zh' ? '已翻回牌堆' : 'Recycled'));
         render();
+        lastMove = { type: 'recycle' };
     }
 
     function renderCard(card, opts) {
@@ -1637,6 +1656,7 @@
                     score = Math.max(0, score + 5);
                     moves += 1;
                     lastMovedCardId = card.id;
+                    lastMove = { type: 'flip', cardId: card.id, col };
                     clearSelection();
                     setStatus('');
                     setHud();
@@ -1772,6 +1792,18 @@
                     if (to === from) continue;
                     if (canMoveToTableau(stack[0], to)) {
                         const bonus = revealBonusIfMoveFrom(from, idx);
+                        const wouldEmpty = idx === 0 && pile.length === stack.length;
+                        const isReverse =
+                            lastMove &&
+                            lastMove.type === 'tableauToTableau' &&
+                            lastMove.cardId != null &&
+                            lastMove.cardId === stack[0].id &&
+                            lastMove.fromCol === to &&
+                            lastMove.toCol === from;
+                        // Avoid hinting zero-progress oscillations (move-back-and-forth) unless it reveals a face-down card
+                        // or creates an empty column (both are meaningful progress).
+                        if (isReverse && bonus === 0 && !wouldEmpty) continue;
+
                         const toTop = top(tableau[to]);
                         const targetCardId = toTop && toTop.faceUp ? toTop.id : null;
                         const dest = tableauTargetLabel(to);
