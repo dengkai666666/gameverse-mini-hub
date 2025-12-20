@@ -3,6 +3,8 @@
 .sol-wrap {
     display: grid;
     gap: 1rem;
+    --sol-card-w: clamp(64px, 10vw, 86px);
+    --sol-card-max: 96px;
 }
 
 .sol-top {
@@ -32,8 +34,9 @@
 }
 
 .sol-slot {
-    width: 86px;
-    height: 120px;
+    width: var(--sol-card-w);
+    height: auto;
+    aspect-ratio: 86 / 120;
     border-radius: 14px;
     border: 2px dashed rgba(108, 92, 231, 0.22);
     background: rgba(108, 92, 231, 0.04);
@@ -46,8 +49,9 @@ body.dark-theme .sol-slot {
 }
 
 .sol-card {
-    width: 86px;
-    height: 120px;
+    width: var(--sol-card-w);
+    height: auto;
+    aspect-ratio: 86 / 120;
     border-radius: 14px;
     border: 1px solid rgba(0, 0, 0, 0.10);
     background: var(--light-card-bg);
@@ -57,7 +61,7 @@ body.dark-theme .sol-slot {
     top: 0;
     display: grid;
     grid-template-rows: auto 1fr auto;
-    padding: 0.45rem 0.55rem;
+    padding: clamp(0.34rem, 0.9vw, 0.45rem) clamp(0.40rem, 1.0vw, 0.55rem);
     user-select: none;
     cursor: pointer;
 }
@@ -143,13 +147,13 @@ body.dark-theme .sol-card {
     justify-content: space-between;
     align-items: center;
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: clamp(0.72rem, 1.6vw, 0.95rem);
 }
 
 .sol-card .sol-center {
     display: grid;
     place-items: center;
-    font-size: 2rem;
+    font-size: clamp(1.35rem, 4.2vw, 2rem);
     font-weight: 900;
 }
 
@@ -185,13 +189,14 @@ body.dark-theme .sol-black {
     height: auto;
     aspect-ratio: 86 / 120;
     margin: 0 auto;
+    max-width: var(--sol-card-max);
 }
 
 .sol-col .sol-card {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 96px;
+    max-width: var(--sol-card-max);
     height: auto;
     aspect-ratio: 86 / 120;
 }
