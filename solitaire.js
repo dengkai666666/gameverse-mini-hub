@@ -43,6 +43,22 @@
     };
     let tutorialRepositionRaf = null;
 
+    // Demo overlay (video-like playback)
+    const demoBtn = document.getElementById('sol-demo');
+    const demoOverlayEl = document.getElementById('sol-demo-overlay');
+    const demoCaptionEl = document.getElementById('sol-demo-caption');
+    const demoExitBtn = document.getElementById('sol-demo-exit');
+    const demoPauseBtn = document.getElementById('sol-demo-pause');
+    const demoPlayBtn = document.getElementById('sol-demo-play');
+
+    const demo = {
+        active: false,
+        paused: false,
+        token: 0
+    };
+    let demoSaved = null;
+    let demoSavedBodyOverflow = null;
+
     const SUITS = ['♠', '♥', '♦', '♣'];
     const SUIT_COLOR = {
         '♠': 'black',
@@ -106,6 +122,440 @@
         movesEl.textContent = format(tr.movesLabel || (lang === 'zh' ? '步数：{moves}' : 'Moves: {moves}'), { moves });
     }
 
+    function setDemoUi(open) {
+        if (!demoOverlayEl || !demoCaptionEl || !demoExitBtn || !demoPauseBtn || !demoPlayBtn) return;
+        demoOverlayEl.hidden = !open;
+        demoOverlayEl.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    function setDemoCaption(key, fallback) {
+        if (!demoCaptionEl) return;
+        demoCaptionEl.textContent = tt(key, fallback || '');
+    }
+
+    function setDemoPaused(paused) {
+        demo.paused = paused;
+        if (!demoPauseBtn || !demoPlayBtn) return;
+        demoPauseBtn.hidden = paused;
+        demoPlayBtn.hidden = !paused;
+    }
+
+    function captureDemoSnapshot() {
+        const clonePile = (pile) => pile.map(c => ({ ...c }));
+        const clonePiles = (piles) => piles.map(p => clonePile(p));
+        const cloneHistory = (h) => ({
+            stock: clonePile(h.stock || []),
+            waste: clonePile(h.waste || []),
+            foundations: clonePiles(h.foundations || [[], [], [], []]),
+            tableau: clonePiles(h.tableau || Array.from({ length: 7 }, () => [])),
+            score: h.score || 0,
+            moves: h.moves || 0
+        });
+
+        return {
+            stock: clonePile(stock),
+            waste: clonePile(waste),
+            foundations: clonePiles(foundations),
+            tableau: clonePiles(tableau),
+            score,
+            moves,
+            selection: selection ? { ...selection } : null,
+            hint: hint ? { sourceId: hint.sourceId, target: hint.target ? { ...hint.target } : null } : null,
+            lastMovedCardId,
+            suppressClickUntil,
+            status: statusEl.textContent || '',
+            history: history.map(cloneHistory),
+            controls: {
+                newDisabled: !!newBtn.disabled,
+                undoDisabled: !!undoBtn.disabled,
+                hintDisabled: !!hintBtn.disabled,
+                autoDisabled: !!autoBtn.disabled,
+                guideDisabled: !!guideBtn.disabled,
+                demoDisabled: !!(demoBtn && demoBtn.disabled)
+            }
+        };
+    }
+
+    function restoreDemoSnapshot(saved) {
+        if (!saved) return;
+        const clonePile = (pile) => pile.map(c => ({ ...c }));
+        const clonePiles = (piles) => piles.map(p => clonePile(p));
+        const cloneHistory = (h) => ({
+            stock: clonePile(h.stock || []),
+            waste: clonePile(h.waste || []),
+            foundations: clonePiles(h.foundations || [[], [], [], []]),
+            tableau: clonePiles(h.tableau || Array.from({ length: 7 }, () => [])),
+            score: h.score || 0,
+            moves: h.moves || 0
+        });
+
+        stock = clonePile(saved.stock || []);
+        waste = clonePile(saved.waste || []);
+        foundations = clonePiles(saved.foundations || [[], [], [], []]);
+        tableau = clonePiles(saved.tableau || Array.from({ length: 7 }, () => []));
+        score = saved.score || 0;
+        moves = saved.moves || 0;
+        selection = saved.selection ? { ...saved.selection } : null;
+        hint = saved.hint ? { sourceId: saved.hint.sourceId, target: saved.hint.target ? { ...saved.hint.target } : null } : null;
+        lastMovedCardId = saved.lastMovedCardId != null ? saved.lastMovedCardId : null;
+        suppressClickUntil = saved.suppressClickUntil || 0;
+        history = (saved.history || []).map(cloneHistory);
+
+        newBtn.disabled = !!(saved.controls && saved.controls.newDisabled);
+        undoBtn.disabled = !!(saved.controls && saved.controls.undoDisabled);
+        hintBtn.disabled = !!(saved.controls && saved.controls.hintDisabled);
+        autoBtn.disabled = !!(saved.controls && saved.controls.autoDisabled);
+        guideBtn.disabled = !!(saved.controls && saved.controls.guideDisabled);
+        if (demoBtn) demoBtn.disabled = !!(saved.controls && saved.controls.demoDisabled);
+
+        setHud();
+        setStatus(saved.status || '');
+        render();
+    }
+
+    function enforceDemoControls() {
+        newBtn.disabled = true;
+        undoBtn.disabled = true;
+        hintBtn.disabled = true;
+        autoBtn.disabled = true;
+        guideBtn.disabled = true;
+        if (demoBtn) demoBtn.disabled = true;
+    }
+
+    function stopDemo({ restoreState } = {}) {
+        const shouldRestore = restoreState !== false;
+        demo.token += 1;
+        demo.active = false;
+        setDemoUi(false);
+        setDemoPaused(false);
+        clearDemoHighlight();
+
+        if (demoSavedBodyOverflow != null) {
+            document.body.style.overflow = demoSavedBodyOverflow;
+            demoSavedBodyOverflow = null;
+        }
+
+        if (shouldRestore && demoSaved) {
+            restoreDemoSnapshot(demoSaved);
+        }
+        demoSaved = null;
+    }
+
+    function demoSleep(ms) {
+        const myToken = demo.token;
+        return new Promise((resolve) => {
+            let last = performance.now();
+            let remaining = ms;
+            function tick(now) {
+                if (demo.token !== myToken) return resolve();
+                if (demo.paused) {
+                    last = now;
+                    return requestAnimationFrame(tick);
+                }
+                const dt = now - last;
+                last = now;
+                remaining -= dt;
+                if (remaining <= 0) return resolve();
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+    }
+
+    function clearDemoHighlight() {
+        document.querySelectorAll('.sol-demo-highlight').forEach(el => el.classList.remove('sol-demo-highlight'));
+    }
+
+    function demoHighlight(selector) {
+        clearDemoHighlight();
+        if (!selector) return null;
+        const el = document.querySelector(selector);
+        if (el) el.classList.add('sol-demo-highlight');
+        return el;
+    }
+
+    function getCardElById(id) {
+        return document.querySelector(`.sol-card[data-card-id="${id}"]:not(.dragging)`);
+    }
+
+    function createDemoLayer() {
+        const layer = document.createElement('div');
+        layer.className = 'sol-drag-layer';
+        document.body.appendChild(layer);
+        return layer;
+    }
+
+    function animMoveElements(elements, fromRect, toRect, dyStep, durationMs) {
+        const layer = createDemoLayer();
+        const clones = [];
+        for (let i = 0; i < elements.length; i++) {
+            const el = renderCard(elements[i], {});
+            el.classList.add('dragging');
+            el.style.position = 'fixed';
+            el.style.left = `${fromRect.left}px`;
+            el.style.top = `${fromRect.top + i * dyStep}px`;
+            el.style.transform = 'none';
+            el.style.transition = `left ${durationMs}ms ease-out, top ${durationMs}ms ease-out`;
+            el.style.zIndex = String(14000 + i);
+            layer.appendChild(el);
+            clones.push(el);
+        }
+        // kick animation
+        requestAnimationFrame(() => {
+            for (let i = 0; i < clones.length; i++) {
+                clones[i].style.left = `${toRect.left}px`;
+                clones[i].style.top = `${toRect.top + i * dyStep}px`;
+            }
+        });
+        return demoSleep(durationMs + 80).then(() => layer.remove());
+    }
+
+    function tableauDropRect(col) {
+        const slot = tableauEl.querySelector(`.sol-slot[data-col="${col}"]`);
+        const pile = tableau[col];
+        if (pile && pile.length) {
+            const t0 = top(pile);
+            const el = getCardElById(t0.id);
+            if (el) {
+                const r = el.getBoundingClientRect();
+                return { left: r.left, top: r.top + 22 };
+            }
+        }
+        if (slot) {
+            const r = slot.getBoundingClientRect();
+            return { left: r.left, top: r.top };
+        }
+        return { left: window.innerWidth / 2, top: window.innerHeight / 2 };
+    }
+
+    function foundationRect(i) {
+        const el = foundationEls[i];
+        const r = el.getBoundingClientRect();
+        return { left: r.left, top: r.top };
+    }
+
+    function wasteRect() {
+        const r = wasteEl.getBoundingClientRect();
+        return { left: r.left, top: r.top };
+    }
+
+    function stockRect() {
+        const r = stockEl.getBoundingClientRect();
+        return { left: r.left, top: r.top };
+    }
+
+    function setDemoStateBasic() {
+        // Deterministic, compact state for teaching the loop
+        const deck = makeDeck();
+        const take = (suit, rank) => {
+            const idx = deck.findIndex(c => c.suit === suit && c.rank === rank);
+            const c = deck.splice(idx, 1)[0];
+            c.faceUp = true;
+            return c;
+        };
+
+        selection = null;
+        hint = null;
+        lastMovedCardId = null;
+        history = [];
+        undoBtn.disabled = true;
+        score = 0;
+        moves = 0;
+
+        foundations = [[], [], [], []];
+        // ♠ A-9, ♥ A-9, ♦ A-10, ♣ A-9
+        for (let r = 1; r <= 9; r++) foundations[0].push(take('♠', r));
+        for (let r = 1; r <= 9; r++) foundations[1].push(take('♥', r));
+        for (let r = 1; r <= 10; r++) foundations[2].push(take('♦', r));
+        for (let r = 1; r <= 9; r++) foundations[3].push(take('♣', r));
+
+        tableau = Array.from({ length: 7 }, () => []);
+        const tenClub = take('♣', 10);
+        tenClub.faceUp = false;
+        const jackDiamond = take('♦', 11);
+        tableau[2].push(tenClub, jackDiamond);
+
+        const tenSpade = take('♠', 10);
+        tenSpade.faceUp = false;
+        stock = [tenSpade];
+        waste = [];
+
+        setHud();
+        setStatus('');
+        render();
+    }
+
+    function setDemoStateFinish() {
+        const deck = makeDeck();
+        const take = (suit, rank) => {
+            const idx = deck.findIndex(c => c.suit === suit && c.rank === rank);
+            const c = deck.splice(idx, 1)[0];
+            c.faceUp = true;
+            return c;
+        };
+
+        selection = null;
+        hint = null;
+        lastMovedCardId = null;
+        history = [];
+        undoBtn.disabled = true;
+        score = 0;
+        moves = 0;
+
+        foundations = [[], [], [], []];
+        for (let r = 1; r <= 12; r++) foundations[0].push(take('♠', r));
+        for (let r = 1; r <= 12; r++) foundations[1].push(take('♥', r));
+        for (let r = 1; r <= 12; r++) foundations[2].push(take('♦', r));
+        for (let r = 1; r <= 12; r++) foundations[3].push(take('♣', r));
+
+        tableau = Array.from({ length: 7 }, () => []);
+        tableau[0].push(take('♠', 13));
+        tableau[1].push(take('♥', 13));
+        tableau[2].push(take('♦', 13));
+        tableau[3].push(take('♣', 13));
+
+        stock = [];
+        waste = [];
+
+        setHud();
+        setStatus('');
+        render();
+    }
+
+    async function demoDrawOnce() {
+        // animate a face-down card from stock to waste, then actually draw
+        const dummy = { id: -999, suit: '♠', rank: 13, faceUp: false };
+        await animMoveElements([dummy], stockRect(), wasteRect(), 22, 320);
+        drawFromStock();
+    }
+
+    async function demoMoveWasteToFoundation(fIndex) {
+        const c = top(waste);
+        if (!c) return;
+        const fromEl = getCardElById(c.id);
+        const fromRect = fromEl ? fromEl.getBoundingClientRect() : wasteRect();
+        await animMoveElements([c], fromRect, foundationRect(fIndex), 22, 320);
+        selection = { from: 'waste' };
+        moveSelectionToFoundation(fIndex);
+    }
+
+    async function demoMoveTableauTopToFoundation(col, fIndex) {
+        const c = top(tableau[col]);
+        if (!c || !c.faceUp) return;
+        const fromEl = getCardElById(c.id);
+        const fromRect = fromEl ? fromEl.getBoundingClientRect() : tableauDropRect(col);
+        await animMoveElements([c], fromRect, foundationRect(fIndex), 22, 320);
+        selection = { from: 'tableau', col, index: tableau[col].length - 1 };
+        moveSelectionToFoundation(fIndex);
+    }
+
+    async function runDemo() {
+        if (!demoOverlayEl || !demoBtn) return;
+        if (demo.active) return;
+
+        // close tutorial if open
+        if (tutorial.open) showTutorial(false, true);
+
+        // snapshot current state and lock scroll for stable overlays/animations
+        demoSaved = captureDemoSnapshot();
+        demoSavedBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        demo.active = true;
+        demo.paused = false;
+        demo.token += 1;
+        const myToken = demo.token;
+        setDemoUi(true);
+        setDemoPaused(false);
+
+        // disable other controls while demo runs
+        enforceDemoControls();
+
+        try {
+            // Part 1: teach core loop
+            setDemoStateBasic();
+            enforceDemoControls();
+            setDemoCaption('solDemoIntro', 'This demo shows a few key moves, then fast-forwards to a finish.');
+            await demoSleep(1200);
+            if (demo.token !== myToken) return;
+
+            setDemoCaption('solDemoStock', 'Step 1: Draw from Stock.');
+            demoHighlight('#sol-stock');
+            await demoSleep(700);
+            await demoDrawOnce();
+            enforceDemoControls();
+            await demoSleep(600);
+            if (demo.token !== myToken) return;
+
+            setDemoCaption('solDemoWaste', 'Step 2: Move the drawn card (Waste) to a valid target.');
+            demoHighlight('#sol-waste');
+            await demoSleep(500);
+            clearDemoHighlight();
+            await demoMoveWasteToFoundation(0);
+            enforceDemoControls();
+            await demoSleep(600);
+            if (demo.token !== myToken) return;
+
+            setDemoCaption('solDemoReveal', 'Step 3: Move a top card to reveal a hidden card.');
+            demoHighlight('.sol-col[data-col="2"]');
+            await demoSleep(500);
+            clearDemoHighlight();
+            await demoMoveTableauTopToFoundation(2, 2);
+            enforceDemoControls();
+            await demoSleep(650);
+            // move the revealed 10♣ to foundation ♣
+            await demoMoveTableauTopToFoundation(2, 3);
+            enforceDemoControls();
+            await demoSleep(650);
+            if (demo.token !== myToken) return;
+
+            setDemoCaption('solDemoHintAuto', 'Tip: Hint highlights a suggested move. Auto safely moves eligible cards to Foundations.');
+            demoHighlight('#sol-hint');
+            await demoSleep(700);
+            const h = computeHint();
+            hint = h && h.target ? { sourceId: h.sourceId, target: h.target } : null;
+            setStatus(h ? h.message : '');
+            render();
+            enforceDemoControls();
+            await demoSleep(900);
+            clearDemoHighlight();
+            demoHighlight('#sol-auto');
+            await demoSleep(500);
+            autoMoveToFoundations();
+            enforceDemoControls();
+            await demoSleep(900);
+            clearDemoHighlight();
+
+            // Part 2: fast-forward to a finish
+            setDemoCaption('solDemoFastForward', 'Fast-forward: let\'s jump to the final moves.');
+            await demoSleep(1200);
+            if (demo.token !== myToken) return;
+
+            setDemoStateFinish();
+            enforceDemoControls();
+            setDemoCaption('solDemoFinish', 'Finish: move the last Kings to Foundations to win.');
+            await demoSleep(700);
+
+            await demoMoveTableauTopToFoundation(0, 0);
+            enforceDemoControls();
+            await demoSleep(450);
+            await demoMoveTableauTopToFoundation(1, 1);
+            enforceDemoControls();
+            await demoSleep(450);
+            await demoMoveTableauTopToFoundation(2, 2);
+            enforceDemoControls();
+            await demoSleep(450);
+            await demoMoveTableauTopToFoundation(3, 3);
+            enforceDemoControls();
+            await demoSleep(700);
+
+            setDemoCaption('solDemoDone', 'Demo complete. Try it yourself!');
+            await demoSleep(900);
+        } finally {
+            if (demo.token === myToken) stopDemo();
+        }
+
+    }
     function clearTutorialHighlight() {
         document.querySelectorAll('.sol-tut-highlight').forEach(el => el.classList.remove('sol-tut-highlight'));
     }
@@ -1094,6 +1544,10 @@
 
     document.addEventListener('keydown', (e) => {
         const key = e.key;
+        if (demo.active) {
+            if (key === 'Escape') stopDemo();
+            return;
+        }
         if (key === 'Escape') {
             clearSelection();
             return;
@@ -1116,6 +1570,7 @@
     });
 
     function onPointerDownOnCard(e, source) {
+        if (demo.active) return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         if (dragState.pending || dragState.active) return;
 
@@ -1192,6 +1647,21 @@
 
     wasteEl.addEventListener('pointerdown', (e) => onPointerDownOnCard(e, 'waste'));
     tableauEl.addEventListener('pointerdown', (e) => onPointerDownOnCard(e, 'tableau'));
+
+    if (demoBtn && demoOverlayEl && demoExitBtn && demoPauseBtn && demoPlayBtn) {
+        demoBtn.addEventListener('click', () => runDemo());
+        demoExitBtn.addEventListener('click', () => {
+            stopDemo();
+        });
+        demoPauseBtn.addEventListener('click', () => setDemoPaused(true));
+        demoPlayBtn.addEventListener('click', () => setDemoPaused(false));
+        demoOverlayEl.addEventListener('click', (e) => {
+            if (e.target && e.target.classList.contains('sol-demo-backdrop')) {
+                // allow click-through; don't exit automatically
+                setDemoPaused(!demo.paused);
+            }
+        });
+    }
 
     dealNewGame();
     // auto-show tutorial on first visit

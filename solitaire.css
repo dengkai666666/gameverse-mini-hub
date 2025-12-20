@@ -329,3 +329,12 @@ body.dark-theme .sol-tutorial-step {
     outline-offset: 4px;
     border-radius: 16px;
 }
+
+.sol-demo-highlight {
+    position: relative;
+    z-index: 12501;
+    outline: 3px solid rgba(0, 206, 201, 0.55);
+    outline-offset: 4px;
+    border-radius: 16px;
+    pointer-events: none;
+}
