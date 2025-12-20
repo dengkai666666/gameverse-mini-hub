@@ -1812,6 +1812,29 @@
         hint = h && h.target ? { sourceId: h.sourceId, target: h.target, targetCardId: h.targetCardId || null } : null;
         setStatus(h ? h.message : '');
         render();
+
+        // If the tableau is horizontally scrollable, bring the hinted target into view.
+        if (hint && hint.target) {
+            requestAnimationFrame(() => {
+                if (!hint || !hint.target) return;
+                let el = null;
+                if (hint.targetCardId != null) {
+                    el = document.querySelector(`.sol-card[data-card-id="${hint.targetCardId}"]`);
+                }
+                if (!el && hint.target.type === 'tableau') {
+                    el = document.querySelector(`.sol-col[data-col="${hint.target.index}"]`);
+                } else if (!el && hint.target.type === 'foundation') {
+                    el = foundationEls[hint.target.index] || null;
+                } else if (!el && hint.target.type === 'stock') {
+                    el = stockEl;
+                } else if (!el && hint.target.type === 'waste') {
+                    el = wasteEl;
+                }
+                if (el && typeof el.scrollIntoView === 'function') {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        }
         if (practice.active && practice.expected === 'hint') advancePracticeStep();
     });
 
