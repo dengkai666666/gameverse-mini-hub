@@ -41,6 +41,7 @@
             { key: 'solTutTip', target: '#sol-hint' }
         ]
     };
+    let tutorialRepositionRaf = null;
 
     const SUITS = ['♠', '♥', '♦', '♣'];
     const SUIT_COLOR = {
@@ -120,6 +121,10 @@
             tutorialEl.hidden = true;
             tutorialEl.setAttribute('aria-hidden', 'true');
             clearTutorialHighlight();
+            if (tutorialRepositionRaf) {
+                cancelAnimationFrame(tutorialRepositionRaf);
+                tutorialRepositionRaf = null;
+            }
             return;
         }
 
@@ -176,6 +181,18 @@
         pop.style.setProperty('--arrow-left', `${arrowLeft}px`);
     }
 
+    function scheduleTutorialReposition() {
+        if (!tutorial.open) return;
+        if (!tutorialPopoverEl) return;
+        if (tutorialRepositionRaf) return;
+        tutorialRepositionRaf = requestAnimationFrame(() => {
+            tutorialRepositionRaf = null;
+            const s = tutorial.steps[tutorial.step];
+            const targetEl = s.target ? document.querySelector(s.target) : null;
+            positionTutorialPopover(targetEl);
+        });
+    }
+
     function renderTutorialStep() {
         if (!tutorial.open) return;
         const s = tutorial.steps[tutorial.step];
@@ -200,9 +217,7 @@
         }
 
         // position after layout
-        requestAnimationFrame(() => {
-            positionTutorialPopover(targetEl);
-        });
+        scheduleTutorialReposition();
     }
 
     function isSuppressedClick() {
@@ -1072,12 +1087,9 @@
         tutorialEl.addEventListener('click', (e) => {
             if (e.target && e.target.classList.contains('sol-tutorial-backdrop')) closeTutorial(true);
         });
-        window.addEventListener('resize', () => {
-            if (!tutorial.open) return;
-            const s = tutorial.steps[tutorial.step];
-            const targetEl = s.target ? document.querySelector(s.target) : null;
-            positionTutorialPopover(targetEl);
-        });
+        window.addEventListener('resize', scheduleTutorialReposition);
+        // Capture scroll events from window and any scrollable containers
+        document.addEventListener('scroll', scheduleTutorialReposition, true);
     }
 
     document.addEventListener('keydown', (e) => {
