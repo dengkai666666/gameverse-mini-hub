@@ -112,6 +112,19 @@
         return tr[key] || fallback || key;
     }
 
+    function cardLabel(card) {
+        if (!card) return '';
+        return `${rankLabel(card.rank)}${card.suit}`;
+    }
+
+    function tableauTargetLabel(col) {
+        const pile = tableau[col];
+        const t0 = top(pile);
+        if (!t0) return tt('solEmptyColumn', getLang() === 'zh' ? '空列' : 'Empty column');
+        if (!t0.faceUp) return tt('solFaceDown', getLang() === 'zh' ? '暗牌' : 'Face-down');
+        return cardLabel(t0);
+    }
+
     function setStatus(text) {
         statusEl.textContent = text || '';
     }
@@ -1124,12 +1137,12 @@
         const w = top(waste);
         if (w) {
             const selected = selection && selection.from === 'waste';
-            const hinted = hint && hint.sourceId === w.id;
-            const moved = lastMovedCardId === w.id;
-            const el = renderCard(w, { selected, hinted, moved });
-            el.style.position = 'absolute';
-            wasteEl.appendChild(el);
-        }
+                const hinted = hint && (hint.sourceId === w.id || hint.targetCardId === w.id);
+                const moved = lastMovedCardId === w.id;
+                const el = renderCard(w, { selected, hinted, moved });
+                el.style.position = 'absolute';
+                wasteEl.appendChild(el);
+            }
 
         // foundations
         for (let i = 0; i < 4; i++) {
@@ -1166,7 +1179,7 @@
                     selection.from === 'tableau' &&
                     selection.col === col &&
                     selection.index === i;
-                const hinted = hint && hint.sourceId === card.id;
+                const hinted = hint && (hint.sourceId === card.id || hint.targetCardId === card.id);
                 const moved = lastMovedCardId === card.id;
                 const el = renderCard(card, { selected, hinted, moved });
                 el.style.top = `${i * 22}px`;
@@ -1230,6 +1243,7 @@
 
         hint = null;
         setStatus('');
+        render();
 
         let stack = null;
         if (source === 'waste') {
@@ -1431,7 +1445,7 @@
         hint = null;
 
         const candidates = [];
-        const add = (weight, sourceId, target, message) => candidates.push({ weight, sourceId, target, message });
+        const add = (weight, sourceId, target, message, targetCardId) => candidates.push({ weight, sourceId, target, message, targetCardId: targetCardId || null });
 
         const revealBonusIfMoveFrom = (fromCol, fromIndex) => {
             if (fromCol == null || fromIndex == null) return 0;
@@ -1449,7 +1463,11 @@
         if (w) {
             for (let i = 0; i < 4; i++) {
                 if (canMoveToFoundation(w, i) && safeToAutoMoveToFoundation(w)) {
-                    add(100, w.id, { type: 'foundation', index: i }, tr.hintMoveToFoundation || (lang === 'zh' ? '提示：可将牌移到基础堆' : 'Hint: move to foundation'));
+                    const msg = format(
+                        tr.hintMoveToFoundationDetail || (lang === 'zh' ? '提示：将 {card} 移到基础堆' : 'Hint: move {card} to Foundations'),
+                        { card: cardLabel(w) }
+                    );
+                    add(100, w.id, { type: 'foundation', index: i }, msg);
                 }
             }
         }
@@ -1460,7 +1478,11 @@
                 for (let i = 0; i < 4; i++) {
                     if (canMoveToFoundation(c, i) && safeToAutoMoveToFoundation(c)) {
                         const bonus = revealBonusIfMoveFrom(col, tableau[col].length - 1);
-                        add(95 + bonus, c.id, { type: 'foundation', index: i }, tr.hintMoveToFoundation || (lang === 'zh' ? '提示：可将牌移到基础堆' : 'Hint: move to foundation'));
+                        const msg = format(
+                            tr.hintMoveToFoundationDetail || (lang === 'zh' ? '提示：将 {card} 移到基础堆' : 'Hint: move {card} to Foundations'),
+                            { card: cardLabel(c) }
+                        );
+                        add(95 + bonus, c.id, { type: 'foundation', index: i }, msg);
                     }
                 }
             }
@@ -1469,7 +1491,16 @@
         if (w) {
             for (let col = 0; col < 7; col++) {
                 if (canMoveToTableau(w, col)) {
-                    add(70, w.id, { type: 'tableau', index: col }, tr.hintMoveToTableau || (lang === 'zh' ? '提示：可将牌移到牌列' : 'Hint: move to tableau'));
+                    const pileTop = top(tableau[col]);
+                    const targetCardId = pileTop && pileTop.faceUp ? pileTop.id : null;
+                    const dest = tableauTargetLabel(col);
+                    const msg = format(
+                        pileTop
+                            ? (tr.hintMoveToTableauDetail || (lang === 'zh' ? '提示：将 {card} 移到 {dest} 上' : 'Hint: move {card} onto {dest}'))
+                            : (tr.hintMoveToTableauEmptyDetail || (lang === 'zh' ? '提示：将 {card} 移到空列' : 'Hint: move {card} to an empty column')),
+                        { card: cardLabel(w), dest }
+                    );
+                    add(70, w.id, { type: 'tableau', index: col }, msg, targetCardId);
                 }
             }
         }
@@ -1485,7 +1516,16 @@
                     if (to === from) continue;
                     if (canMoveToTableau(stack[0], to)) {
                         const bonus = revealBonusIfMoveFrom(from, idx);
-                        add(60 + bonus, stack[0].id, { type: 'tableau', index: to }, tr.hintMoveToTableau || (lang === 'zh' ? '提示：可将牌移到牌列' : 'Hint: move to tableau'));
+                        const toTop = top(tableau[to]);
+                        const targetCardId = toTop && toTop.faceUp ? toTop.id : null;
+                        const dest = tableauTargetLabel(to);
+                        const msg = format(
+                            toTop
+                                ? (tr.hintMoveToTableauDetail || (lang === 'zh' ? '提示：将 {card} 移到 {dest} 上' : 'Hint: move {card} onto {dest}'))
+                                : (tr.hintMoveToTableauEmptyDetail || (lang === 'zh' ? '提示：将 {card} 移到空列' : 'Hint: move {card} to an empty column')),
+                            { card: cardLabel(stack[0]), dest }
+                        );
+                        add(60 + bonus, stack[0].id, { type: 'tableau', index: to }, msg, targetCardId);
                     }
                 }
             }
@@ -1503,12 +1543,12 @@
 
         candidates.sort((a, b) => b.weight - a.weight);
         const best = candidates[0];
-        return { sourceId: best.sourceId, target: best.target, message: best.message };
+        return { sourceId: best.sourceId, target: best.target, message: best.message, targetCardId: best.targetCardId || null };
     }
 
     hintBtn.addEventListener('click', () => {
         const h = computeHint();
-        hint = h && h.target ? { sourceId: h.sourceId, target: h.target } : null;
+        hint = h && h.target ? { sourceId: h.sourceId, target: h.target, targetCardId: h.targetCardId || null } : null;
         setStatus(h ? h.message : '');
         render();
     });
