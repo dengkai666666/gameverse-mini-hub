@@ -31,17 +31,33 @@
 
     const tutorial = {
         open: false,
+        mode: null, // null -> pick mode, 'tour' -> quick tour, 'practice' -> step-by-step practice
         step: 0,
-        steps: [
-            { key: 'solTutWelcome', target: null },
-            { key: 'solTutStock', target: '#sol-stock' },
-            { key: 'solTutWaste', target: '#sol-waste' },
-            { key: 'solTutFoundations', target: '#sol-foundation-0' },
-            { key: 'solTutTableau', target: '#sol-tableau' },
-            { key: 'solTutTip', target: '#sol-hint' }
+        stepsTour: [
+            { key: 'solTutWelcome', targets: [] },
+            { key: 'solTutStock', targets: ['#sol-stock'] },
+            { key: 'solTutWaste', targets: ['#sol-waste'] },
+            { key: 'solTutFoundations', targets: ['#sol-foundation-0'] },
+            { key: 'solTutTableau', targets: ['#sol-tableau'] },
+            { key: 'solTutTip', targets: ['#sol-hint'] }
+        ],
+        stepsPractice: [
+            { key: 'solPracIntro', targets: [], kind: 'intro' },
+            { key: 'solPracDraw', targets: ['#sol-stock'], expect: 'draw' },
+            { key: 'solPracMoveWaste', targets: ['#sol-waste', '.sol-col[data-col="0"]'], expect: 'moveWasteToCol0' },
+            { key: 'solPracFlip', targets: ['.sol-col[data-col="1"]'], expect: 'flipCol1Top' },
+            { key: 'solPracFoundation', targets: ['#sol-foundation-0', '#sol-foundation-1', '#sol-foundation-2', '#sol-foundation-3'], expect: 'moveADiamondToFoundation' },
+            { key: 'solPracHint', targets: ['#sol-hint'], expect: 'hint' },
+            { key: 'solPracDone', targets: [], kind: 'done' }
         ]
     };
     let tutorialRepositionRaf = null;
+    const practice = {
+        active: false,
+        expected: null,
+        saved: null,
+        savedBodyOverflow: null
+    };
 
     // Demo overlay (video-like playback)
     const demoBtn = document.getElementById('sol-demo');
@@ -583,6 +599,7 @@
 
         tutorial.open = open;
         if (!open) {
+            if (practice.active) stopPractice();
             tutorialEl.hidden = true;
             tutorialEl.setAttribute('aria-hidden', 'true');
             clearTutorialHighlight();
@@ -590,11 +607,14 @@
                 cancelAnimationFrame(tutorialRepositionRaf);
                 tutorialRepositionRaf = null;
             }
+            tutorial.mode = null;
+            tutorial.step = 0;
             return;
         }
 
         tutorialEl.hidden = false;
         tutorialEl.setAttribute('aria-hidden', 'false');
+        tutorial.mode = force ? null : 'tour';
         tutorial.step = 0;
         tutorialDontShowEl.checked = localStorage.getItem(TUTORIAL_SEEN_KEY) === '1';
         renderTutorialStep();
@@ -604,6 +624,132 @@
         if (markSeen) localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
         if (tutorialDontShowEl && tutorialDontShowEl.checked) localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
         showTutorial(false, true);
+    }
+
+    function getTutorialSteps() {
+        if (tutorial.mode === 'tour') return tutorial.stepsTour;
+        if (tutorial.mode === 'practice') return tutorial.stepsPractice;
+        return null;
+    }
+
+    function getTutorialStep() {
+        const steps = getTutorialSteps();
+        if (!steps) return null;
+        return steps[tutorial.step] || null;
+    }
+
+    function tutorialTargetElement(step) {
+        const targets = (step && step.targets) ? step.targets : [];
+        for (const sel of targets) {
+            const el = sel ? document.querySelector(sel) : null;
+            if (el) return el;
+        }
+        return null;
+    }
+
+    function setTutorialMode(mode) {
+        tutorial.mode = mode;
+        tutorial.step = 0;
+        renderTutorialStep();
+    }
+
+    function currentPracticeInstruction() {
+        const s = tutorial.stepsPractice[tutorial.step];
+        return s ? tt(s.key, '') : '';
+    }
+
+    function practiceFollowStatus() {
+        const lang = getLang();
+        const tr = t(lang);
+        const text = currentPracticeInstruction();
+        setStatus(format(tr.solPracFollow || (lang === 'zh' ? '请按引导操作：{text}' : 'Follow the guide: {text}'), { text }));
+    }
+
+    function enforcePracticeControls() {
+        if (!practice.active) return;
+        newBtn.disabled = true;
+        undoBtn.disabled = true;
+        autoBtn.disabled = true;
+        guideBtn.disabled = true;
+        if (demoBtn) demoBtn.disabled = true;
+        hintBtn.disabled = practice.expected !== 'hint';
+    }
+
+    function setPracticeExpectedFromTutorialStep() {
+        if (!practice.active) return;
+        const s = tutorial.stepsPractice[tutorial.step];
+        practice.expected = s && s.expect ? s.expect : null;
+        enforcePracticeControls();
+    }
+
+    function setPracticeState() {
+        // Deterministic, tiny state for hands-on learning.
+        // Step flow: Draw 5♥ -> move onto 6♠ -> flip A♦ -> move A♦ to any Foundation -> press Hint.
+        const deck = makeDeck();
+        const take = (suit, rank, faceUp) => {
+            const idx = deck.findIndex(c => c.suit === suit && c.rank === rank);
+            const c = deck.splice(idx, 1)[0];
+            c.faceUp = !!faceUp;
+            return c;
+        };
+
+        selection = null;
+        hint = null;
+        lastMovedCardId = null;
+        suppressClickUntil = 0;
+        history = [];
+        undoBtn.disabled = true;
+        score = 0;
+        moves = 0;
+
+        foundations = [[], [], [], []];
+        tableau = Array.from({ length: 7 }, () => []);
+        tableau[0].push(take('♠', 6, true));
+        tableau[1].push(take('♦', 1, false));
+        stock = [take('♥', 5, false)];
+        waste = [];
+
+        setHud();
+        setStatus('');
+        render();
+    }
+
+    function startPractice() {
+        if (practice.active) return;
+        if (demo.active) stopDemo();
+        practice.saved = captureDemoSnapshot();
+        practice.savedBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        practice.active = true;
+        practice.expected = null;
+        setPracticeState();
+        enforcePracticeControls();
+    }
+
+    function stopPractice({ restoreState } = {}) {
+        const shouldRestore = restoreState !== false;
+        practice.active = false;
+        practice.expected = null;
+        if (practice.savedBodyOverflow != null) {
+            document.body.style.overflow = practice.savedBodyOverflow;
+            practice.savedBodyOverflow = null;
+        }
+        if (shouldRestore && practice.saved) {
+            restoreDemoSnapshot(practice.saved);
+        }
+        practice.saved = null;
+    }
+
+    function advancePracticeStep() {
+        if (tutorial.mode !== 'practice') return;
+        const next = Math.min(tutorial.stepsPractice.length - 1, tutorial.step + 1);
+        tutorial.step = next;
+        // If we reached the done screen, restore the user's game while keeping the dialog open.
+        const s = tutorial.stepsPractice[tutorial.step];
+        if (s && s.kind === 'done' && practice.active) {
+            stopPractice();
+        }
+        renderTutorialStep();
     }
 
     function clamp(n, min, max) {
@@ -652,34 +798,88 @@
         if (tutorialRepositionRaf) return;
         tutorialRepositionRaf = requestAnimationFrame(() => {
             tutorialRepositionRaf = null;
-            const s = tutorial.steps[tutorial.step];
-            const targetEl = s.target ? document.querySelector(s.target) : null;
-            positionTutorialPopover(targetEl);
+            const s = getTutorialStep();
+            positionTutorialPopover(tutorialTargetElement(s));
         });
     }
 
     function renderTutorialStep() {
         if (!tutorial.open) return;
-        const s = tutorial.steps[tutorial.step];
+        const lang = getLang();
+
+        // Mode picker (shown when opened via Guide button)
+        if (tutorial.mode == null) {
+            clearTutorialHighlight();
+            tutorialStepEl.innerHTML = `
+                <div>${tt('solTutChooseMode', lang === 'zh' ? '选择引导模式：' : 'Choose a guide mode:')}</div>
+                <div class="sol-tutorial-mode">
+                    <button type="button" class="btn" id="sol-tutorial-mode-tour">${tt('solTutModeTour', lang === 'zh' ? '快速介绍' : 'Quick Tour')}</button>
+                    <button type="button" class="btn primary-btn" id="sol-tutorial-mode-practice">${tt('solTutModePractice', lang === 'zh' ? '新手一步一步' : 'Step-by-step Practice')}</button>
+                </div>
+                <div class="sol-tutorial-sub">${tt('solTutModeNote', lang === 'zh' ? '提示：练习会临时切换到一局“教学牌面”，退出后会回到你原来的牌局。' : 'Note: Practice switches to a teaching layout temporarily and restores your game when you exit.')}</div>
+            `;
+
+            tutorialBackBtn.hidden = true;
+            tutorialNextBtn.hidden = true;
+            tutorialSkipBtn.hidden = false;
+            tutorialSkipBtn.dataset.key = 'exit';
+            tutorialSkipBtn.textContent = tt('exit', 'Exit');
+
+            const tourBtn = document.getElementById('sol-tutorial-mode-tour');
+            const pracBtn = document.getElementById('sol-tutorial-mode-practice');
+            if (tourBtn) tourBtn.addEventListener('click', () => setTutorialMode('tour'), { once: true });
+            if (pracBtn) pracBtn.addEventListener('click', () => setTutorialMode('practice'), { once: true });
+
+            scheduleTutorialReposition();
+            return;
+        }
+
+        const steps = getTutorialSteps();
+        const s = steps[tutorial.step];
+
         tutorialStepEl.textContent = tt(s.key, '');
 
         clearTutorialHighlight();
-        const targetEl = s.target ? document.querySelector(s.target) : null;
-        if (targetEl) targetEl.classList.add('sol-tut-highlight');
+        const targets = s.targets || [];
+        for (const sel of targets) {
+            const el = sel ? document.querySelector(sel) : null;
+            if (el) el.classList.add('sol-tut-highlight');
+        }
 
-        tutorialBackBtn.disabled = tutorial.step === 0;
-        const isLast = tutorial.step === tutorial.steps.length - 1;
-        tutorialNextBtn.textContent = tt(isLast ? 'done' : 'next', isLast ? 'Done' : 'Next');
-        if (isLast) {
-            tutorialNextBtn.dataset.key = 'done';
+        // Buttons per mode
+        tutorialSkipBtn.hidden = false;
+        tutorialSkipBtn.dataset.key = tutorial.mode === 'practice' ? 'exit' : 'skip';
+        tutorialSkipBtn.textContent = tt(tutorialSkipBtn.dataset.key, tutorial.mode === 'practice' ? 'Exit' : 'Skip');
+
+        if (tutorial.mode === 'tour') {
+            tutorialBackBtn.hidden = false;
+            tutorialNextBtn.hidden = false;
+            tutorialBackBtn.disabled = tutorial.step === 0;
+            const isLast = tutorial.step === steps.length - 1;
+            tutorialNextBtn.textContent = tt(isLast ? 'done' : 'next', isLast ? 'Done' : 'Next');
+            tutorialNextBtn.dataset.key = isLast ? 'done' : 'next';
         } else {
-            tutorialNextBtn.dataset.key = 'next';
+            // practice
+            const isIntro = s.kind === 'intro';
+            const isDone = s.kind === 'done';
+
+            tutorialBackBtn.hidden = true;
+            tutorialNextBtn.hidden = !(isIntro || isDone);
+            if (isIntro) {
+                tutorialNextBtn.dataset.key = 'start';
+                tutorialNextBtn.textContent = tt('start', lang === 'zh' ? '开始' : 'Start');
+            } else if (isDone) {
+                tutorialNextBtn.dataset.key = 'done';
+                tutorialNextBtn.textContent = tt('done', 'Done');
+            }
         }
 
         // mark seen after the first time it pops automatically
         if (localStorage.getItem(TUTORIAL_SEEN_KEY) !== '1') {
             localStorage.setItem(TUTORIAL_SEEN_KEY, '1');
         }
+
+        if (tutorial.mode === 'practice' && practice.active) setPracticeExpectedFromTutorialStep();
 
         // position after layout
         scheduleTutorialReposition();
@@ -936,9 +1136,32 @@
     }
 
     function moveSelectionToFoundation(fIndex) {
+        if (demo.active) return false;
         const lang = getLang();
         const tr = t(lang);
         if (!selection) return false;
+        if (practice.active) {
+            const exp = practice.expected;
+            if (exp && exp !== 'moveADiamondToFoundation') {
+                practiceFollowStatus();
+                return false;
+            }
+            if (exp === 'moveADiamondToFoundation') {
+                const stack = selectedCards();
+                const card = stack && stack.length === 1 ? stack[0] : null;
+                const isTarget =
+                    card &&
+                    card.rank === 1 &&
+                    card.suit === '♦' &&
+                    selection.from === 'tableau' &&
+                    selection.col === 1 &&
+                    selection.index === tableau[selection.col].length - 1;
+                if (!isTarget) {
+                    practiceFollowStatus();
+                    return false;
+                }
+            }
+        }
         if (selection.from === 'tableau') {
             const stack = selectedCards();
             if (!stack || stack.length !== 1) {
@@ -964,6 +1187,7 @@
             clearSelection();
             setStatus('');
             setHud();
+            if (practice.active && practice.expected === 'moveADiamondToFoundation') advancePracticeStep();
             return true;
         }
 
@@ -981,15 +1205,32 @@
         clearSelection();
         setStatus('');
         setHud();
+        if (practice.active && practice.expected === 'moveADiamondToFoundation') advancePracticeStep();
         return true;
     }
 
     function moveSelectionToTableau(col) {
+        if (demo.active) return false;
         const lang = getLang();
         const tr = t(lang);
         const stack = selectedCards();
         if (!stack || !stack.length) return false;
         const card = stack[0];
+        if (practice.active) {
+            const exp = practice.expected;
+            if (exp && exp !== 'moveWasteToCol0') {
+                practiceFollowStatus();
+                return false;
+            }
+            if (exp === 'moveWasteToCol0') {
+                const w = top(waste);
+                const okCard = w && w.rank === 5 && w.suit === '♥';
+                if (!okCard || !selection || selection.from !== 'waste' || col !== 0) {
+                    practiceFollowStatus();
+                    return false;
+                }
+            }
+        }
         if (!canMoveToTableau(card, col)) {
             setStatus(tr.solitaireInvalidMove || (lang === 'zh' ? '这步不合法' : 'Invalid move'));
             return false;
@@ -1012,6 +1253,7 @@
         clearSelection();
         setStatus('');
         setHud();
+        if (practice.active && practice.expected === 'moveWasteToCol0') advancePracticeStep();
         return true;
     }
 
@@ -1064,6 +1306,11 @@
     }
 
     function drawFromStock() {
+        if (demo.active) return;
+        if (practice.active && practice.expected !== 'draw') {
+            practiceFollowStatus();
+            return;
+        }
         const lang = getLang();
         const tr = t(lang);
 
@@ -1077,6 +1324,7 @@
             setHud();
             setStatus('');
             render();
+            if (practice.active && practice.expected === 'draw') advancePracticeStep();
             return;
         }
         // recycle waste to stock
@@ -1377,6 +1625,13 @@
             if (!card.faceUp) {
                 // flip only if it's the top
                 if (idx === tableau[col].length - 1) {
+                    if (demo.active) return;
+                    if (practice.active) {
+                        if (practice.expected !== 'flipCol1Top' || col !== 1) {
+                            practiceFollowStatus();
+                            return;
+                        }
+                    }
                     pushHistory();
                     card.faceUp = true;
                     score = Math.max(0, score + 5);
@@ -1385,6 +1640,7 @@
                     clearSelection();
                     setStatus('');
                     setHud();
+                    if (practice.active && practice.expected === 'flipCol1Top') advancePracticeStep();
                     return;
                 }
                 return;
@@ -1547,10 +1803,16 @@
     }
 
     hintBtn.addEventListener('click', () => {
+        if (demo.active) return;
+        if (practice.active && practice.expected !== 'hint') {
+            practiceFollowStatus();
+            return;
+        }
         const h = computeHint();
         hint = h && h.target ? { sourceId: h.sourceId, target: h.target, targetCardId: h.targetCardId || null } : null;
         setStatus(h ? h.message : '');
         render();
+        if (practice.active && practice.expected === 'hint') advancePracticeStep();
     });
 
     document.addEventListener('languageChanged', () => {
@@ -1569,16 +1831,30 @@
     if (tutorialEl && tutorialSkipBtn && tutorialBackBtn && tutorialNextBtn) {
         tutorialSkipBtn.addEventListener('click', () => closeTutorial(true));
         tutorialBackBtn.addEventListener('click', () => {
+            if (tutorial.mode !== 'tour') return;
+            const steps = getTutorialSteps() || [];
             tutorial.step = Math.max(0, tutorial.step - 1);
+            tutorial.step = Math.min(Math.max(0, steps.length - 1), tutorial.step);
             renderTutorialStep();
         });
         tutorialNextBtn.addEventListener('click', () => {
-            const isLast = tutorial.step === tutorial.steps.length - 1;
-            if (isLast) {
+            if (tutorial.mode === 'practice') {
+                const s = getTutorialStep();
+                if (s && s.kind === 'intro') {
+                    startPractice();
+                    tutorial.step = Math.min(tutorial.stepsPractice.length - 1, tutorial.step + 1);
+                    renderTutorialStep();
+                    setPracticeExpectedFromTutorialStep();
+                    return;
+                }
                 closeTutorial(true);
                 return;
             }
-            tutorial.step = Math.min(tutorial.steps.length - 1, tutorial.step + 1);
+            if (tutorial.mode !== 'tour') return;
+            const steps = getTutorialSteps() || [];
+            const isLast = tutorial.step === steps.length - 1;
+            if (isLast) return closeTutorial(true);
+            tutorial.step = Math.min(steps.length - 1, tutorial.step + 1);
             renderTutorialStep();
         });
         tutorialEl.addEventListener('click', (e) => {
@@ -1593,6 +1869,10 @@
         const key = e.key;
         if (demo.active) {
             if (key === 'Escape') stopDemo();
+            return;
+        }
+        if (practice.active) {
+            if (key === 'Escape') closeTutorial(true);
             return;
         }
         if (key === 'Escape') {
