@@ -133,16 +133,11 @@ function getCurrentLanguage() {
 
 // Function to get the appropriate translation source
 function getTranslationSource() {
-    // Check if primary translations are validly loaded
-    if (typeof translations !== 'undefined' && translations && translations.en && translations.zh) {
+    // Only use primary translations. If they fail to load, keep the UI in its default language
+    // rather than falling back to pinyin.
+    if (typeof translations !== 'undefined' && translations && translations.en) {
         return translations;
     }
-    // Otherwise, use fallback (ensure it's also loaded)
-    if (typeof fallbackTranslations !== 'undefined' && fallbackTranslations) {
-        console.warn("Using fallback translations."); // Log warning if using fallback
-        return fallbackTranslations;
-    }
-    // If neither is available, return an empty object to prevent errors
     console.error("No translation data found!");
     return { en: {}, zh: {} };
 }

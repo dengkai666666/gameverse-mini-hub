@@ -283,9 +283,6 @@
             if (typeof translations !== 'undefined' && translations && translations[lang]) {
                 return translations;
             }
-            if (typeof fallbackTranslations !== 'undefined' && fallbackTranslations && fallbackTranslations[lang]) {
-                return fallbackTranslations;
-            }
             return null; // No translations found
         }
 
