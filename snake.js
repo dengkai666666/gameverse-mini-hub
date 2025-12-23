@@ -7,6 +7,12 @@
     const scoreEl = document.getElementById('snake-score');
     const highScoreEl = document.getElementById('snake-high-score');
 
+    // Game mode options
+    const obstacleModeCheckbox = document.getElementById('obstacle-mode');
+    const wallModeCheckbox = document.getElementById('wall-mode');
+    const portalModeCheckbox = document.getElementById('portal-mode');
+    const difficultySelect = document.getElementById('difficulty');
+
     if (!canvas || !statusEl || !startBtn || !newBtn || !scoreEl || !highScoreEl) return;
     const ctx = canvas.getContext('2d');
 
@@ -24,6 +30,21 @@
     let score = 0;
     let lastTick = 0;
     let tickMs = 110;
+
+    // Game mode variables
+    let obstacles = [];
+    let portals = [];
+    let obstacleMode = false;
+    let wallMode = false;
+    let portalMode = false;
+
+    // Difficulty settings
+    const DIFFICULTY_SPEEDS = {
+        easy: 150,
+        normal: 110,
+        hard: 70,
+        extreme: 40
+    };
 
     function getLang() {
         const stored = localStorage.getItem('language');
@@ -76,11 +97,72 @@
         let x = randCell();
         let y = randCell();
         const occupied = new Set(snake.map(p => `${p.x},${p.y}`));
+        obstacles.forEach(o => occupied.add(`${o.x},${o.y}`));
+        portals.forEach(p => occupied.add(`${p.x},${p.y}`));
+
         while (occupied.has(`${x},${y}`)) {
             x = randCell();
             y = randCell();
         }
         food = { x, y };
+    }
+
+    function generateObstacles() {
+        obstacles = [];
+        if (!obstacleMode) return;
+
+        const numObstacles = Math.floor(GRID * GRID * 0.08); // 8% of grid
+        const occupied = new Set(snake.map(p => `${p.x},${p.y}`));
+        occupied.add(`${food.x},${food.y}`);
+
+        for (let i = 0; i < numObstacles; i++) {
+            let x = randCell();
+            let y = randCell();
+            while (occupied.has(`${x},${y}`)) {
+                x = randCell();
+                y = randCell();
+            }
+            obstacles.push({ x, y });
+            occupied.add(`${x},${y}`);
+        }
+    }
+
+    function generatePortals() {
+        portals = [];
+        if (!portalMode) return;
+
+        const numPairs = 2; // 2 pairs of portals
+        const occupied = new Set(snake.map(p => `${p.x},${p.y}`));
+        occupied.add(`${food.x},${food.y}`);
+        obstacles.forEach(o => occupied.add(`${o.x},${o.y}`));
+
+        for (let i = 0; i < numPairs; i++) {
+            let x1 = randCell(), y1 = randCell();
+            let x2 = randCell(), y2 = randCell();
+
+            while (occupied.has(`${x1},${y1}`)) {
+                x1 = randCell();
+                y1 = randCell();
+            }
+            occupied.add(`${x1},${y1}`);
+
+            while (occupied.has(`${x2},${y2}`)) {
+                x2 = randCell();
+                y2 = randCell();
+            }
+            occupied.add(`${x2},${y2}`);
+
+            portals.push({
+                x: x1, y: y1,
+                linkedX: x2, linkedY: y2,
+                color: i
+            });
+            portals.push({
+                x: x2, y: y2,
+                linkedX: x1, linkedY: y1,
+                color: i
+            });
+        }
     }
 
     function reset() {
@@ -95,7 +177,23 @@
             { x: 4, y: 10 }
         ];
         score = 0;
+
+        // Read game mode settings
+        obstacleMode = !!(obstacleModeCheckbox && obstacleModeCheckbox.checked);
+        wallMode = !!(wallModeCheckbox && wallModeCheckbox.checked);
+        portalMode = !!(portalModeCheckbox && portalModeCheckbox.checked);
+
+        // Set difficulty speed
+        const difficulty = difficultySelect ? difficultySelect.value : 'normal';
+        tickMs = DIFFICULTY_SPEEDS[difficulty] || DIFFICULTY_SPEEDS.normal;
+
+        // Clear previous mode state before generating a fresh layout.
+        obstacles = [];
+        portals = [];
+
         spawnFood();
+        generateObstacles();
+        generatePortals();
         setHud();
         updateButtons();
         draw();
@@ -126,6 +224,9 @@
             snake: cssVar('--primary-color', '#6c5ce7'),
             head: cssVar('--secondary-color', '#00cec9'),
             food: cssVar('--accent-color', '#fd79a8'),
+            obstacle: isDark ? '#e74c3c' : '#c0392b',
+            portal1: '#3498db',
+            portal2: '#2ecc71',
             text: isDark ? cssVar('--dark-text', '#dfe6e9') : cssVar('--light-text', '#2d3436')
         };
     }
@@ -150,6 +251,32 @@
             ctx.beginPath();
             ctx.moveTo(0, p);
             ctx.lineTo(GRID * CELL, p);
+            ctx.stroke();
+        }
+
+        // obstacles
+        ctx.fillStyle = c.obstacle;
+        for (const obs of obstacles) {
+            ctx.fillRect(obs.x * CELL + 1, obs.y * CELL + 1, CELL - 2, CELL - 2);
+        }
+
+        // portals
+        for (const portal of portals) {
+            const portalColor = portal.color === 0 ? c.portal1 : c.portal2;
+            ctx.fillStyle = portalColor;
+            ctx.beginPath();
+            ctx.arc(
+                portal.x * CELL + CELL / 2,
+                portal.y * CELL + CELL / 2,
+                CELL / 2 - 3,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+
+            // Add glow effect
+            ctx.strokeStyle = portalColor;
+            ctx.lineWidth = 2;
             ctx.stroke();
         }
 
@@ -181,8 +308,59 @@
         if (!running || paused || gameOver) return;
         dir = nextDir;
         const head = snake[0];
-        const nx = (head.x + dir.x + GRID) % GRID;
-        const ny = (head.y + dir.y + GRID) % GRID;
+
+        let nx, ny;
+
+        if (wallMode) {
+            // Wall collision mode - don't wrap
+            nx = head.x + dir.x;
+            ny = head.y + dir.y;
+
+            // Check wall collision
+            if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID) {
+                gameOver = true;
+                running = false;
+                const hi = readHighScore();
+                if (score > hi) writeHighScore(score);
+                setHud();
+                updateButtons();
+                const lang = getLang();
+                const tr = t(lang);
+                setStatus(tr.gameOver || (lang === 'zh' ? '游戏结束' : 'Game Over'));
+                draw();
+                return;
+            }
+        } else {
+            // Wrap mode (can pass through walls)
+            nx = (head.x + dir.x + GRID) % GRID;
+            ny = (head.y + dir.y + GRID) % GRID;
+        }
+
+        // Check obstacle collision
+        for (const obs of obstacles) {
+            if (obs.x === nx && obs.y === ny) {
+                gameOver = true;
+                running = false;
+                const hi = readHighScore();
+                if (score > hi) writeHighScore(score);
+                setHud();
+                updateButtons();
+                const lang = getLang();
+                const tr = t(lang);
+                setStatus(tr.gameOver || (lang === 'zh' ? '游戏结束' : 'Game Over'));
+                draw();
+                return;
+            }
+        }
+
+        // Check portal teleportation
+        for (const portal of portals) {
+            if (portal.x === nx && portal.y === ny) {
+                nx = portal.linkedX;
+                ny = portal.linkedY;
+                break;
+            }
+        }
 
         // self collision
         for (const p of snake) {
@@ -298,4 +476,3 @@
     reset();
     requestAnimationFrame(loop);
 })();
-
