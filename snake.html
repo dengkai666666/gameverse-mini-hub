@@ -61,8 +61,9 @@
                 <div id="snake-status" class="game-status" aria-live="polite"></div>
             </div>
 
-            <div class="game-options">
-                <div class="option-group">
+            <details class="game-options">
+                <summary data-key="gameSettings">Game settings</summary>
+                <div class="option-group game-options-content">
                     <label for="obstacle-mode">
                         <input type="checkbox" id="obstacle-mode">
                         <span data-key="obstacleMode">障碍物模式</span>
@@ -87,16 +88,23 @@
                         <option value="extreme" data-key="difficultyExtreme">极限</option>
                     </select>
                 </div>
-            </div>
+            </details>
 
             <div class="game-grid two-col">
                 <div class="game-panel">
                     <div class="snake-wrap">
-                        <canvas id="snake-canvas" class="snake-canvas" width="480" height="480" aria-label="Snake game canvas"></canvas>
+                        <canvas id="snake-canvas" class="snake-canvas" width="480" height="480" aria-label="Snake game canvas" data-key-aria-label="snakeCanvasLabel"></canvas>
                         <div class="snake-hud">
                             <div id="snake-score"></div>
                             <div id="snake-high-score"></div>
                         </div>
+                        <div class="snake-dpad" aria-label="Snake controls" data-key-aria-label="snakeControlsLabel">
+                            <button type="button" class="up" aria-label="Up" data-key-aria-label="directionUp"><i class="fas fa-chevron-up"></i></button>
+                            <button type="button" class="left" aria-label="Left" data-key-aria-label="directionLeft"><i class="fas fa-chevron-left"></i></button>
+                            <button type="button" class="right" aria-label="Right" data-key-aria-label="directionRight"><i class="fas fa-chevron-right"></i></button>
+                            <button type="button" class="down" aria-label="Down" data-key-aria-label="directionDown"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                        <p class="game-subtitle snake-control-hint" data-key="snakeHint">Use arrow keys (or the pad) to move. Space to pause.</p>
                     </div>
                 </div>
                 <div class="game-panel">
@@ -108,13 +116,6 @@
                             <li data-key="snakeHow3">Space pauses/resumes. New Game resets the run.</li>
                             <li data-key="snakeHow4">High score is saved on this device.</li>
                         </ul>
-                        <div class="snake-dpad" aria-label="Snake controls">
-                            <button type="button" class="up" aria-label="Up"><i class="fas fa-chevron-up"></i></button>
-                            <button type="button" class="left" aria-label="Left"><i class="fas fa-chevron-left"></i></button>
-                            <button type="button" class="right" aria-label="Right"><i class="fas fa-chevron-right"></i></button>
-                            <button type="button" class="down" aria-label="Down"><i class="fas fa-chevron-down"></i></button>
-                        </div>
-                        <p class="game-subtitle" data-key="snakeHint">Use arrow keys (or the pad) to move. Space to pause.</p>
                     </div>
                 </div>
             </div>

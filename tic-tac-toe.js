@@ -70,13 +70,18 @@
 
     function renderBoard() {
         boardEl.innerHTML = '';
+        const lang = getLang();
+        const tr = t(lang);
         for (let i = 0; i < 9; i++) {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'ttt-cell';
             btn.dataset.index = String(i);
             btn.setAttribute('role', 'gridcell');
-            btn.setAttribute('aria-label', `Cell ${i + 1}`);
+            btn.setAttribute('aria-label', format(
+                tr.tttCellLabel || (lang === 'zh' ? '第 {cell} 格，{value}' : 'Cell {cell}, {value}'),
+                { cell: i + 1, value: cells[i] || tr.emptyCell || (lang === 'zh' ? '空白' : 'empty') }
+            ));
             btn.textContent = cells[i] ? cells[i] : '';
             btn.disabled = finished || Boolean(cells[i]);
             btn.addEventListener('click', onCellClick);
@@ -180,9 +185,11 @@
     modeEl.addEventListener('change', startNewGame);
     newBtn.addEventListener('click', startNewGame);
 
-    document.addEventListener('languageChanged', () => setStatus());
+    document.addEventListener('languageChanged', () => {
+        renderBoard();
+        setStatus();
+    });
 
     // Initial
     startNewGame();
 })();
-

@@ -139,7 +139,9 @@
         updateButtons();
         const lang = getLang();
         const tr = t(lang);
-        setStatus(paused ? (tr.pause || (lang === 'zh' ? '暂停' : 'Pause')) : (tr.resume || (lang === 'zh' ? '继续' : 'Resume')));
+        setStatus(paused
+            ? (tr.pausedStatus || (lang === 'zh' ? '已暂停' : 'Paused'))
+            : (tr.flappyRunning || (lang === 'zh' ? '进行中' : 'Running')));
     }
 
     function collide() {
@@ -313,6 +315,8 @@
         const lang = getLang();
         const tr = t(lang);
         if (!running) setStatus(tr.flappyReady || (lang === 'zh' ? '准备就绪' : 'Ready'));
+        else if (paused) setStatus(tr.pausedStatus || (lang === 'zh' ? '已暂停' : 'Paused'));
+        else setStatus(tr.flappyRunning || (lang === 'zh' ? '进行中' : 'Running'));
     });
 
     reset();

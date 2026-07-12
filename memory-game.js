@@ -32,6 +32,7 @@
             this.movesElement = document.querySelector('#featured .moves');
             this.timerElement = document.querySelector('#featured .timer');
             this.resetButton = document.querySelector('#featured #reset-game');
+            this.resultElement = document.querySelector('#featured #memory-result');
 
             if (!this.cardsContainer) {
                 log('Error: .game-board not found within the provided game container.');
@@ -92,6 +93,10 @@
             if (this.movesElement) this.updateMovesText();
             if (this.timerElement) this.updateTimerText();
             this.clearTimer(); // Stop any existing timer
+            if (this.resultElement) {
+                this.resultElement.hidden = true;
+                this.resultElement.textContent = '';
+            }
 
             this.createCards(); // Prepare card data
             this.renderCards(); // Render cards to the DOM
@@ -283,19 +288,21 @@
             this.clearTimer();
             this.gameActive = false; // Stop game interaction
 
-            setTimeout(() => {
-                const currentLang = localStorage.getItem('language') || (navigator.language || navigator.userLanguage).split('-')[0];
-                const lang = ['zh', 'en'].includes(currentLang) ? currentLang : 'en';
-                const translationSource = this.getTranslationSource(lang);
-                let congratsMessage = (translationSource && translationSource[lang] && translationSource[lang].congratulations)
-                    ? translationSource[lang].congratulations
-                    : (lang === 'zh' ? '恭喜！您用了 {moves} 步和 {seconds} 秒完成了游戏。' : 'Congratulations! You completed the game in {moves} moves and {seconds} seconds.');
-                
-                congratsMessage = congratsMessage.replace('{moves}', this.moves).replace('{seconds}', this.timer);
-                alert(congratsMessage);
-                // Optionally, re-initialize the game automatically or prompt user
-                // this.initGame(); 
-            }, 500); // Short delay before showing win message
+            this.updateResultText();
+            if (this.resultElement) {
+                this.resultElement.hidden = false;
+                this.resultElement.focus({ preventScroll: true });
+            }
+        }
+
+        updateResultText(lang) {
+            if (!this.resultElement) return;
+            const currentLang = lang || localStorage.getItem('language') || (navigator.language || navigator.userLanguage).split('-')[0];
+            const safeLang = ['zh', 'en'].includes(currentLang) ? currentLang : 'en';
+            const translationSource = this.getTranslationSource(safeLang);
+            const template = (translationSource && translationSource[safeLang] && translationSource[safeLang].congratulations)
+                || (safeLang === 'zh' ? '恭喜！您用了 {moves} 步和 {seconds} 秒完成了游戏。' : 'Congratulations! You completed the game in {moves} moves and {seconds} seconds.');
+            this.resultElement.textContent = template.replace('{moves}', this.moves).replace('{seconds}', this.timer);
         }
         
         getTranslationSource(lang) {
@@ -376,6 +383,7 @@
                 const cardElement = this.cardsContainer.querySelector(`.memory-card[data-id="${card.id}"]`);
                 if (cardElement) cardElement.setAttribute('aria-label', this.getCardAriaLabel(card, lang));
             });
+            if (this.matchedPairs === this.totalCards / 2) this.updateResultText(lang);
         }
 
         // Optional welcome animation (can be called after renderCards in initGame)

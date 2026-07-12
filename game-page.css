@@ -92,6 +92,21 @@ body.dark-theme .game-controls select {
     background: rgba(108, 92, 231, 0.04);
 }
 
+.game-options summary {
+    cursor: pointer;
+    color: var(--primary-dark);
+    font-weight: 800;
+    min-height: 32px;
+}
+
+body.dark-theme .game-options summary {
+    color: var(--primary-light);
+}
+
+.game-options[open] summary {
+    margin-bottom: 0.8rem;
+}
+
 body.dark-theme .game-options {
     border-color: rgba(162, 155, 254, 0.18);
     background: rgba(162, 155, 254, 0.06);
@@ -279,6 +294,11 @@ body.dark-theme .snake-canvas {
     font-weight: 600;
 }
 
+.snake-control-hint {
+    margin-bottom: 0;
+    text-align: center;
+}
+
 .snake-dpad {
     display: grid;
     grid-template-columns: 56px 56px 56px;
@@ -379,6 +399,16 @@ body.dark-theme .snake-dpad button {
 
     .option-group:last-child {
         grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .snake-canvas {
+        width: min(270px, 100%);
+    }
+
+    .snake-dpad {
+        grid-template-columns: repeat(3, 48px);
+        grid-template-rows: repeat(3, 48px);
+        gap: 0.35rem;
     }
 
     .ttt-board {

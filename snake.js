@@ -428,7 +428,9 @@
 
         paused = !paused;
         updateButtons();
-        setStatus(paused ? (tr.pause || (lang === 'zh' ? '暂停' : 'Pause')) : (tr.resume || (lang === 'zh' ? '继续' : 'Resume')));
+        setStatus(paused
+            ? (tr.pausedStatus || (lang === 'zh' ? '已暂停' : 'Paused'))
+            : (tr.snakeRunning || (lang === 'zh' ? '进行中' : 'Running')));
     }
 
     function bindControls() {
@@ -462,6 +464,9 @@
 
     startBtn.addEventListener('click', toggleStartPause);
     newBtn.addEventListener('click', reset);
+    [obstacleModeCheckbox, wallModeCheckbox, portalModeCheckbox, difficultySelect]
+        .filter(Boolean)
+        .forEach(control => control.addEventListener('change', reset));
     document.addEventListener('languageChanged', () => {
         setHud();
         updateButtons();
@@ -470,6 +475,8 @@
         const lang = getLang();
         const tr = t(lang);
         if (!running) setStatus(tr.snakeReady || (lang === 'zh' ? '准备就绪' : 'Ready'));
+        else if (paused) setStatus(tr.pausedStatus || (lang === 'zh' ? '已暂停' : 'Paused'));
+        else setStatus(tr.snakeRunning || (lang === 'zh' ? '进行中' : 'Running'));
     });
 
     bindControls();

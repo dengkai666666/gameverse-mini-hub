@@ -218,6 +218,11 @@ function updatePageLanguage(lang) {
         }
     });
 
+    document.querySelectorAll('[data-key-aria-label]').forEach(element => {
+        const label = translationData[element.dataset.keyAriaLabel];
+        if (label) element.setAttribute('aria-label', label);
+    });
+
     // --- Specific handling for Game Cards (using data-key-* attributes) ---
     document.querySelectorAll('.game-card').forEach(card => {
         // Translate Title

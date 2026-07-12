@@ -666,6 +666,23 @@ body.dark-theme .memory-card.matched .front-face {
     border-top: 1px solid var(--light-grey);
 }
 
+.memory-result {
+    margin: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(24, 122, 74, 0.3);
+    border-radius: var(--border-radius-md);
+    background: rgba(24, 122, 74, 0.1);
+    color: #125c38;
+    font-weight: 700;
+    text-align: center;
+}
+
+body.dark-theme .memory-result {
+    border-color: rgba(85, 239, 196, 0.35);
+    background: rgba(85, 239, 196, 0.1);
+    color: #b8f7e8;
+}
+
 .game-instructions h4 {
     margin-bottom: 0.5rem;
     color: var(--primary-dark);
