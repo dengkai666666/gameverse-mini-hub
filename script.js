@@ -91,35 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.forEach(element => observer.observe(element));
 });
 
-// --- Newsletter Form Handling ---
-const newsletterForm = document.querySelector('.newsletter-form');
-if (newsletterForm) {
-    newsletterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const emailInput = newsletterForm.querySelector('input[type="email"]');
-        const email = emailInput.value.trim();
-        const lang = getCurrentLanguage(); // Get current language
-
-        // Get translated messages using current language
-        const messages = getTranslationsForLang(lang);
-        const thankYouMessage = messages.thankYou || 'Thank you for subscribing!';
-        const validEmailMessage = messages.validEmail || 'Please enter a valid email address.';
-
-        if (email && isValidEmail(email)) {
-            alert(thankYouMessage); // Use translated message
-            emailInput.value = '';
-        } else {
-            alert(validEmailMessage); // Use translated message
-        }
-    });
-}
-
-// Email validation helper
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
 // --- Language Switching Logic ---
 
 // Function to get the current language setting
@@ -215,7 +186,6 @@ function startTypewriterEffect(element, text) {
 
 // Update page language based on selected language
 function updatePageLanguage(lang) {
-    console.log('Updating page language to:', lang);
     document.documentElement.lang = lang;
     updateThemeControl(document.body.classList.contains('dark-theme'));
 
@@ -234,8 +204,6 @@ function updatePageLanguage(lang) {
             // Special handling for typewriter effect
             if (element.classList.contains('typewriter-text')) {
                 startTypewriterEffect(element, translationData[key]);
-            } else if (element.tagName === 'INPUT' && element.type === 'email' && key === 'yourEmail') {
-                element.placeholder = translationData[key];
             } else if (element.tagName === 'OPTION') {
                 element.textContent = translationData[key];
             } else if (element.tagName === 'LABEL' && element.classList.contains('sr-only')) {
@@ -294,12 +262,6 @@ function updatePageLanguage(lang) {
         const copyrightText = translationData.allRightsReserved || 'All Rights Reserved.'; // Fallback text
         copyrightElement.textContent = `\u00A9 ${year} GameVerse. ${copyrightText}`;
     }
-
-    // --- Specific handling for Newsletter Email Placeholder ---
-     const emailInput = document.querySelector('.newsletter-form input[type="email"]');
-     if (emailInput) {
-         emailInput.placeholder = translationData.yourEmail || 'Your email address'; // Fallback placeholder
-     }
 
     // --- Dispatch event for other scripts (like memory game) ---
     const event = new CustomEvent('languageChanged', { detail: { language: lang } });

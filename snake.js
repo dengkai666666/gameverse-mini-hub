@@ -295,7 +295,7 @@
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = c.text;
-            ctx.font = '700 28px Poppins, sans-serif';
+            ctx.font = '700 28px system-ui, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const lang = getLang();

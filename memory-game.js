@@ -1,9 +1,11 @@
 // memory-game.js
 
 (function() {
+    const debug = new URLSearchParams(window.location.search).has('debug');
+
     // Helper function to log messages consistently
     function log(message) {
-        console.log('[MemoryGame]', message);
+        if (debug) console.debug('[MemoryGame]', message);
     }
 
     class MemoryGame {
