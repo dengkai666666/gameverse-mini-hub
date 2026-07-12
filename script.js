@@ -4,6 +4,10 @@ const filterButtons = document.querySelectorAll('.filter-btn');
 const gameCards = document.querySelectorAll('.game-card');
 const languageSelector = document.getElementById('language-selector'); // Get language selector
 
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
 function updateThemeControl(isDark) {
     if (!themeToggle) return;
     const icon = themeToggle.querySelector('i');

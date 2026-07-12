@@ -95,6 +95,7 @@ img {
     font-size: 0.85rem; /* 减小字体大小 */
     box-shadow: var(--shadow-light);
     text-align: center;
+    min-height: 44px;
 }
 
 .primary-btn {
@@ -793,6 +794,7 @@ body.dark-theme .memory-result {
     font-weight: 500;
     color: var(--grey-color); /* Start greyed out */
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    min-height: 44px;
 }
 
 .filter-btn:hover {
@@ -1391,6 +1393,61 @@ body.dark-theme .game-thumb {
     .memory-card .front-face i,
     .memory-card .back-face i {
         font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .logo h1 {
+        font-size: 1.6rem;
+    }
+
+    .language-switch select {
+        max-width: 96px;
+        padding: 5px 22px 5px 8px;
+        font-size: 0.8rem;
+    }
+
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+    }
+
+    .nav-controls {
+        gap: 0.35rem;
+        padding-inline: 3px;
+    }
+
+    .nav-links {
+        gap: 1rem;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .hero {
+        min-height: auto;
+        padding: 2rem 5% 2.5rem;
+    }
+
+    .hero-image {
+        display: none;
+    }
+
+    .hero-content {
+        order: 1;
+        padding-right: 0;
+        text-align: center;
+    }
+
+    .hero-badge {
+        margin-inline: auto;
+    }
+
+    .hero-content p {
+        margin-inline: auto;
+    }
+
+    .hero-actions {
+        justify-content: center;
     }
 }
 

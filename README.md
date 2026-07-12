@@ -41,7 +41,7 @@ GameVerse is a polished, bilingual mini-game collection that runs entirely in th
 - **Accessible** — semantic controls, keyboard navigation, live status text and reduced-motion support.
 - **Theme aware** — polished light and dark themes with persistent settings.
 - **Zero install** — no package manager, framework or build pipeline required.
-- **Offline-friendly foundation** — relative assets and an installable web app manifest.
+- **Works offline** — the service worker precaches the complete game collection after the first visit.
 
 ## Run locally
 
@@ -63,12 +63,13 @@ tic-tac-toe.html / tic-tac-toe.js       Tic Tac Toe
 2048.html / 2048.css / 2048-anim.js     2048
 flappy-bird.html / flappy-bird.js        Flappy Bird
 solitaire.html / solitaire.css / solitaire.js
-site.webmanifest / favicon.svg           Installable app metadata
+site.webmanifest / favicon.svg / sw.js   Installable app metadata and offline cache
 ```
 
 ## Quality targets
 
 - Works without a backend server.
+- Works offline after the first successful visit.
 - No horizontal overflow at 390px mobile width.
 - Keyboard-accessible interactive controls.
 - Light and dark theme contrast checks.
@@ -84,3 +85,5 @@ If you enjoy GameVerse, please **star the repository** and share the live demo.
 ## License
 
 [MIT](LICENSE) © 2026 GameVerse contributors
+
+Font Awesome Free assets are bundled for reliable offline loading under their original open-source licenses; see [`vendor/fontawesome/LICENSE.txt`](vendor/fontawesome/LICENSE.txt).

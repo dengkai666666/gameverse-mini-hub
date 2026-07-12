@@ -192,6 +192,7 @@ body.dark-theme .game-status {
     border: 1px solid rgba(108, 92, 231, 0.12);
     border-radius: var(--border-radius-md);
     padding: 1rem;
+    min-width: 0;
 }
 
 .howto-title {
@@ -418,5 +419,24 @@ body.dark-theme .snake-dpad button {
     .ttt-cell {
         min-height: 78px;
         border-radius: 12px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .game-page-main {
+        padding: 1rem 3% 2rem;
+    }
+
+    .game-shell {
+        padding: 1.25rem;
+    }
+
+    .game-shell h1 {
+        font-size: 1.75rem;
+    }
+
+    .game-subtitle,
+    .game-toolbar {
+        margin-bottom: 0.85rem;
     }
 }
