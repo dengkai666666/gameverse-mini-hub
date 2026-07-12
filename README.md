@@ -40,7 +40,7 @@ GameVerse is a polished, bilingual mini-game collection that runs entirely in th
 - **Bilingual** — instant Chinese/English switching with saved preference.
 - **Accessible** — semantic controls, keyboard navigation, live status text and reduced-motion support.
 - **Theme aware** — polished light and dark themes with persistent settings.
-- **Local player record** — personal bests and completed rounds stay privately on the device.
+- **Local player record** — personal bests, completed rounds and six unlockable achievements stay privately on the device.
 - **Easy to share** — native mobile sharing with a clipboard fallback helps friends open the live demo.
 - **Zero install** — no package manager, framework or build pipeline required.
 - **Works offline** — the service worker precaches the complete game collection after the first visit.

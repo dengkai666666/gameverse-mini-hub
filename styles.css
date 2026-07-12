@@ -830,7 +830,7 @@ body.dark-theme .memory-result {
 }
 
 .progress-icon {
-    grid-row: 1 / 3;
+    grid-row: 1 / 4;
     font-size: 1.75rem;
 }
 
@@ -844,6 +844,22 @@ body.dark-theme .memory-result {
     color: var(--primary-dark);
     font-size: 1.2rem;
     line-height: 1.25;
+}
+
+.progress-achievement {
+    justify-self: start;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(99, 110, 114, 0.12);
+    color: var(--grey-color);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.progress-achievement.unlocked {
+    background: rgba(0, 127, 123, 0.14);
+    color: #00695c;
 }
 
 .progress-privacy {
@@ -864,6 +880,11 @@ body.dark-theme .progress-card {
 
 body.dark-theme .progress-card strong {
     color: var(--primary-light);
+}
+
+body.dark-theme .progress-achievement.unlocked {
+    background: rgba(85, 239, 196, 0.14);
+    color: #55efc4;
 }
 
 .category-filter {

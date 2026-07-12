@@ -153,12 +153,20 @@ function readStoredNumber(key) {
 
 function updateLocalProgress() {
     const lang = getCurrentLanguage();
+    const stats = {
+        memory: readStoredNumber('memoryWins'),
+        snake: readStoredNumber('snakeHighScore'),
+        g2048: readStoredNumber('g2048BestScore'),
+        flappy: readStoredNumber('flappyBestScore'),
+        ttt: readStoredNumber('tttGamesPlayed'),
+        solitaire: readStoredNumber('solitaireWins')
+    };
     const values = {
-        snake: String(readStoredNumber('snakeHighScore')),
-        g2048: String(readStoredNumber('g2048BestScore')),
-        flappy: String(readStoredNumber('flappyBestScore')),
-        ttt: String(readStoredNumber('tttGamesPlayed')),
-        solitaire: String(readStoredNumber('solitaireWins'))
+        snake: String(stats.snake),
+        g2048: String(stats.g2048),
+        flappy: String(stats.flappy),
+        ttt: String(stats.ttt),
+        solitaire: String(stats.solitaire)
     };
     const memoryMoves = readStoredNumber('memoryBestMoves');
     const memoryTime = readStoredNumber('memoryBestTime');
@@ -168,6 +176,15 @@ function updateLocalProgress() {
 
     document.querySelectorAll('[data-stat]').forEach(element => {
         element.textContent = values[element.dataset.stat] ?? '0';
+    });
+
+    const goals = { memory: 1, snake: 10, g2048: 2048, flappy: 5, ttt: 5, solitaire: 1 };
+    const labels = translations[lang] || translations.en;
+    document.querySelectorAll('[data-achievement]').forEach(element => {
+        const game = element.dataset.achievement;
+        const unlocked = stats[game] >= goals[game];
+        element.textContent = unlocked ? `✓ ${labels.achievementUnlocked}` : `${labels.achievementGoal}: ${labels[`goal${game[0].toUpperCase()}${game.slice(1)}`]}`;
+        element.classList.toggle('unlocked', unlocked);
     });
 }
 
