@@ -4,12 +4,23 @@ const filterButtons = document.querySelectorAll('.filter-btn');
 const gameCards = document.querySelectorAll('.game-card');
 const languageSelector = document.getElementById('language-selector'); // Get language selector
 
+function updateThemeControl(isDark) {
+    if (!themeToggle) return;
+    const icon = themeToggle.querySelector('i');
+    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    const isZh = document.documentElement.lang === 'zh';
+    themeToggle.setAttribute('aria-label', isDark
+        ? (isZh ? '切换到浅色模式' : 'Switch to light theme')
+        : (isZh ? '切换到深色模式' : 'Switch to dark theme'));
+    themeToggle.setAttribute('aria-pressed', String(isDark));
+}
+
 // --- Theme Toggle Logic ---
 if (themeToggle) {
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
         const isDark = document.body.classList.contains('dark-theme');
-        themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        updateThemeControl(isDark);
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 }
@@ -18,19 +29,24 @@ if (themeToggle) {
 window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-theme');
-        if (themeToggle) themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
     }
+    updateThemeControl(document.body.classList.contains('dark-theme'));
 });
 
 // --- Category Filter Logic ---
 filterButtons.forEach(button => {
     button.addEventListener('click', () => {
-        filterButtons.forEach(btn => btn.classList.remove('active'));
+        filterButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        });
         button.classList.add('active');
+        button.setAttribute('aria-pressed', 'true');
         const filterValue = button.getAttribute('data-filter');
 
         gameCards.forEach(card => {
-            card.style.display = (filterValue === 'all' || card.getAttribute('data-category') === filterValue) ? '' : 'none';
+            const matches = filterValue === 'all' || card.getAttribute('data-category') === filterValue;
+            card.toggleAttribute('hidden', !matches);
         });
     });
 });
@@ -53,41 +69,26 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // --- Animate on Scroll Logic ---
-const animateOnScroll = () => {
-    const elements = document.querySelectorAll('.section-header, .game-card, .featured-game-card');
-    const screenPosition = window.innerHeight / 1.3;
-    elements.forEach(element => {
-        if (element.getBoundingClientRect().top < screenPosition) {
-            element.classList.add('animate');
-        }
-    });
-};
-
-// Add animation styles and initialize scroll animation
 document.addEventListener('DOMContentLoaded', () => {
-    const style = document.createElement('style');
-    style.textContent = `
-        .section-header, .game-card, .featured-game-card {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .section-header.animate, .game-card.animate, .featured-game-card.animate {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .game-card {
-            transition-delay: calc(var(--card-index) * 0.08s); /* Slightly faster stagger */
-        }
-    `;
-    document.head.appendChild(style);
-
-    document.querySelectorAll('.game-card').forEach((card, index) => {
+    document.querySelectorAll('.games-grid .game-card, .developer-grid .developer-card').forEach((card, index) => {
         card.style.setProperty('--card-index', index);
     });
 
-    animateOnScroll(); // Initial check
-    window.addEventListener('scroll', animateOnScroll);
+    const elements = document.querySelectorAll('.section-header, .game-card, .featured-game-card, .developer-card');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+        elements.forEach(element => element.classList.add('animate'));
+        return;
+    }
+
+    elements.forEach(element => element.classList.add('reveal-pending'));
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('animate');
+            observer.unobserve(entry.target);
+        });
+    }, { rootMargin: '0px 0px -12% 0px' });
+    elements.forEach(element => observer.observe(element));
 });
 
 // --- Newsletter Form Handling ---
@@ -150,6 +151,16 @@ function getTranslationsForLang(lang) {
 
 // Typewriter effect function
 function startTypewriterEffect(element, text) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        element.textContent = text;
+        element.style.width = 'auto';
+        element.style.maxWidth = 'none';
+        element.style.animation = 'none';
+        const playNowButton = element.parentElement.querySelector('.primary-btn');
+        if (playNowButton) playNowButton.classList.add('show');
+        return;
+    }
+
     // 计算字符数（考虑中英文）
     const charCount = [...text].length; // 使用扩展运算符正确计算Unicode字符
     
@@ -206,6 +217,7 @@ function startTypewriterEffect(element, text) {
 function updatePageLanguage(lang) {
     console.log('Updating page language to:', lang);
     document.documentElement.lang = lang;
+    updateThemeControl(document.body.classList.contains('dark-theme'));
 
     const translationData = getTranslationsForLang(lang);
 

@@ -148,9 +148,12 @@
             const fragment = document.createDocumentFragment(); // Efficient way to append multiple elements
 
             this.cards.forEach(card => {
-                const cardElement = document.createElement('div');
+                const cardElement = document.createElement('button');
+                cardElement.type = 'button';
                 cardElement.classList.add('memory-card');
                 cardElement.setAttribute('data-id', card.id);
+                cardElement.setAttribute('aria-pressed', 'false');
+                cardElement.setAttribute('aria-label', this.getCardAriaLabel(card));
                 
                 // Card faces
                 const frontFace = document.createElement('div');
@@ -217,7 +220,22 @@
                 } else {
                     cardElement.classList.remove('matched');
                 }
+                cardElement.setAttribute('aria-pressed', String(card.isFlipped || card.isMatched));
+                cardElement.setAttribute('aria-label', this.getCardAriaLabel(card));
             }
+        }
+
+        getCardAriaLabel(card, lang) {
+            const currentLang = lang || localStorage.getItem('language') || (navigator.language || navigator.userLanguage).split('-')[0];
+            const isZh = currentLang === 'zh';
+            const position = card.id + 1;
+            if (!card.isFlipped && !card.isMatched) {
+                return isZh ? `第 ${position} 张记忆卡，未翻开` : `Memory card ${position}, hidden`;
+            }
+            const symbol = card.symbol.replace(/^fa-/, '').replaceAll('-', ' ');
+            return isZh
+                ? `第 ${position} 张记忆卡，${symbol}${card.isMatched ? '，已匹配' : '，已翻开'}`
+                : `Memory card ${position}, ${symbol}${card.isMatched ? ', matched' : ', revealed'}`;
         }
 
         checkForMatch() {
@@ -234,9 +252,8 @@
             card1.isMatched = true;
             card2.isMatched = true;
             this.matchedPairs++;
-            
-            // No need to call updateCardUI here as .matched class handles visuals via CSS mostly
-            // The .flip class is already added.
+            this.updateCardUI(card1);
+            this.updateCardUI(card2);
 
             this.flippedCards = []; // Clear for next turn
             this.gameActive = true; // Resume game
@@ -353,6 +370,10 @@
                 const resetText = (translationSource && translationSource[lang] && translationSource[lang].resetGame) ? translationSource[lang].resetGame : (lang === 'zh' ? '重置游戏' : 'Reset Game');
                 this.resetButton.textContent = resetText;
             }
+            this.cards.forEach(card => {
+                const cardElement = this.cardsContainer.querySelector(`.memory-card[data-id="${card.id}"]`);
+                if (cardElement) cardElement.setAttribute('aria-label', this.getCardAriaLabel(card, lang));
+            });
         }
 
         // Optional welcome animation (can be called after renderCards in initGame)
