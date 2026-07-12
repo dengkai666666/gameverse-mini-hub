@@ -1618,60 +1618,20 @@ body.dark-theme .game-thumb {
     }
 }
 
-/* Typewriter effect styles - UPDATED */
 .typewriter-text {
-    /* Inherits font-size, color from .hero-content p */
-    overflow: hidden;
-    border-right: 2px solid var(--typewriter-caret-color);
-    white-space: nowrap;
     margin-left: auto;
     margin-right: auto;
     letter-spacing: 0.15em;
-    width: 0;
-    
-    /* Default values for CSS variables */
-    --typewriter-chars: 40;
-    --typewriter-duration: 3.5s;
-    --typewriter-width: auto;
-    
-    /* Ensure text container has proper width */
-    display: inline-block;
-    max-width: var(--typewriter-width, 100%);
-    
-    animation:
-        typing var(--typewriter-duration) steps(var(--typewriter-chars), end) forwards,
-        blink-caret 0.75s step-end infinite;
 }
 
-@keyframes typing {
-    from { 
-        width: 0;
-    }
-    to { 
-        width: var(--typewriter-width, 100%);
-    }
-}
-
-@keyframes blink-caret {
-    from, to { border-color: transparent; }
-    50% { border-color: var(--typewriter-caret-color); }
-}
-
-/* Hero section button initially hidden - UPDATED SIZE */
 .hero-content .primary-btn {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    display: block;
     margin: 0 auto;
     margin-top: 2rem;
-    /* 调整大小 */
     padding: 0.6rem 1.5rem;
     font-size: 0.85rem;
     min-width: auto;
     width: auto;
     max-width: 150px;
-    /* 确保文本居中 */
     text-align: center;
     display: flex;
     justify-content: center;
@@ -1680,11 +1640,6 @@ body.dark-theme .game-thumb {
 
 .hero-actions .primary-btn {
     margin: 0;
-}
-
-.hero-content .primary-btn.show {
-    opacity: 1;
-    transform: translateY(0);
 }
 /* styles.css */
 /* Add this new rule or modify your existing .game-board::before styles if you have them */

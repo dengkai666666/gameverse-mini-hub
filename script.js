@@ -191,68 +191,8 @@ function updateLocalProgress() {
 window.addEventListener('pageshow', updateLocalProgress);
 document.addEventListener('gameverseStatsUpdated', updateLocalProgress);
 
-// Typewriter effect function
 function startTypewriterEffect(element, text) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        element.textContent = text;
-        element.style.width = 'auto';
-        element.style.maxWidth = 'none';
-        element.style.animation = 'none';
-        const playNowButton = element.parentElement.querySelector('.primary-btn');
-        if (playNowButton) playNowButton.classList.add('show');
-        return;
-    }
-
-    // 计算字符数（考虑中英文）
-    const charCount = [...text].length; // 使用扩展运算符正确计算Unicode字符
-    
-    // 设置基准打字速度（每个字符的时间）
-    const baseSpeed = 100; // 毫秒/字符
-    const duration = Math.max(charCount * baseSpeed / 1000, 1); // 至少1秒
-    
-    // 重置任何现有动画
-    element.style.animation = 'none';
-    element.offsetHeight; // 触发重排
-    
-    // 创建临时元素来计算实际文本宽度
-    const temp = document.createElement('span');
-    temp.style.cssText = `
-        visibility: hidden;
-        position: absolute;
-        white-space: nowrap;
-        font: ${getComputedStyle(element).font};
-        letter-spacing: ${getComputedStyle(element).letterSpacing};
-    `;
-    temp.textContent = text;
-    document.body.appendChild(temp);
-    
-    // 获取实际文本宽度
-    const textWidth = temp.offsetWidth;
-    document.body.removeChild(temp);
-    
-    // 设置元素样式和内容
-    element.style.width = '0';
-    element.style.maxWidth = `${textWidth}px`;
     element.textContent = text;
-    
-    // 设置CSS变量
-    element.style.setProperty('--typewriter-chars', charCount.toString());
-    element.style.setProperty('--typewriter-duration', `${duration}s`);
-    element.style.setProperty('--typewriter-width', `${textWidth}px`);
-    
-    // 重启动画
-    element.style.animation = null;
-    
-    // 隐藏Play Now按钮
-    const playNowButton = element.parentElement.querySelector('.primary-btn');
-    if (playNowButton) {
-        playNowButton.classList.remove('show');
-        
-        // 在打字机效果完成后显示按钮
-        setTimeout(() => {
-            playNowButton.classList.add('show');
-        }, duration * 1000 + 200); // 添加一点延迟
-    }
 }
 
 // Update page language based on selected language
@@ -261,12 +201,6 @@ function updatePageLanguage(lang) {
     updateThemeControl(document.body.classList.contains('dark-theme'));
 
     const translationData = getTranslationsForLang(lang);
-
-    // 隐藏Play Now按钮（在语言切换时）
-    const playNowButton = document.querySelector('.hero-content .primary-btn');
-    if (playNowButton) {
-        playNowButton.classList.remove('show');
-    }
 
     // Select all elements with a data-key attribute
     document.querySelectorAll('[data-key]').forEach(element => {
@@ -350,12 +284,6 @@ function updatePageLanguage(lang) {
 // Initialize language on page load
 document.addEventListener('DOMContentLoaded', function() {
     const initialLang = getCurrentLanguage();
-    
-    // 确保Play Now按钮一开始是隐藏的
-    const playNowButton = document.querySelector('.hero-content .primary-btn');
-    if (playNowButton) {
-        playNowButton.classList.remove('show');
-    }
     
     // 设置下拉菜单语言
     if (languageSelector) {
