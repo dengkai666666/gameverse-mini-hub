@@ -366,6 +366,37 @@ body.dark-theme .hero-badge {
     color: #fff;
 }
 
+.share-btn {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(108, 92, 231, 0.24);
+    background: var(--light-card-bg);
+    color: var(--primary-dark);
+}
+
+.share-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(108, 92, 231, 0.08);
+    color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+body.dark-theme .share-btn {
+    border-color: rgba(162, 155, 254, 0.28);
+    background: var(--dark-card-bg);
+    color: var(--primary-light);
+}
+
+.share-status {
+    min-height: 1.5em;
+    margin-top: 0.75rem;
+    color: var(--grey-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
 .source-btn:hover,
 .github-btn:hover {
     background: #000;

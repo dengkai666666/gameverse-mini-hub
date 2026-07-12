@@ -3,9 +3,31 @@ const themeToggle = document.querySelector('.theme-toggle');
 const filterButtons = document.querySelectorAll('.filter-btn');
 const gameCards = document.querySelectorAll('.game-card');
 const languageSelector = document.getElementById('language-selector'); // Get language selector
+const shareButton = document.querySelector('.share-btn');
+const shareStatus = document.getElementById('share-status');
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+if (shareButton) {
+    shareButton.addEventListener('click', async () => {
+        const lang = getCurrentLanguage();
+        const messages = getTranslationsForLang(lang);
+        const url = 'https://dengkai666666.github.io/gameverse-mini-hub/';
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: 'GameVerse', text: messages.shareDescription, url });
+                if (shareStatus) shareStatus.textContent = '';
+            } else {
+                await navigator.clipboard.writeText(url);
+                if (shareStatus) shareStatus.textContent = messages.linkCopied;
+            }
+        } catch (error) {
+            if (error && error.name === 'AbortError') return;
+            if (shareStatus) shareStatus.textContent = messages.shareFailed;
+        }
+    });
 }
 
 function updateThemeControl(isDark) {
