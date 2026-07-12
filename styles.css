@@ -3,7 +3,7 @@
     --primary-color: #6c5ce7;       /* 主色调 - 紫色 */
     --primary-light: #a29bfe;     /* 浅紫色 */
     --primary-dark: #544ab0;      /* 深紫色 (新) */
-    --secondary-color: #00cec9;     /* 次色调 - 青色 */
+    --secondary-color: #007f7b;     /* 次色调 - 深青色，确保白字对比度 */
     --accent-color: #fd79a8;       /* 强调色 - 粉色 */
     --light-bg: #f8f9fa;          /* 亮色背景 */
     --light-card-bg: #ffffff;     /* 亮色卡片背景 */
@@ -11,7 +11,7 @@
     --dark-bg: #1e272e;           /* 暗色背景 */
     --dark-card-bg: #2d3436;      /* 暗色卡片背景 */
     --dark-text: #dfe6e9;         /* 暗色文本 */
-    --grey-color: #b2bec3;        /* 灰色 */
+    --grey-color: #636e72;        /* 灰色，满足浅色背景文字对比度 */
     --light-grey: #dfe6e9;       /* 浅灰 (新) */
     --success-color: #00b894;     /* 成功色 */
     --warning-color: #fdcb6e;     /* 警告色 */
@@ -25,9 +25,9 @@
     --transition-std: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); /* 标准过渡 (调整) */
 
     /* Difficulty Colors */
-    --difficulty-easy: #2ecc71;
-    --difficulty-medium: #f39c12;
-    --difficulty-hard: #e74c3c;
+    --difficulty-easy: #187a4a;
+    --difficulty-medium: #8a5200;
+    --difficulty-hard: #b42318;
     --difficulty-text: #ffffff;
 
     /* Subtle Background Gradient */
@@ -54,7 +54,7 @@ html {
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
     line-height: 1.7;
     color: var(--light-text);
     background: var(--light-body-gradient); /* Use subtle gradient */
@@ -869,7 +869,7 @@ body.dark-theme .memory-card.matched .front-face {
 }
 
 .category {
-    background-color: var(--primary-light);
+    background-color: var(--primary-color);
     color: white;
     padding: 0.3rem 0.9rem; /* Adjusted padding */
     border-radius: var(--border-radius-lg);
@@ -894,6 +894,7 @@ body.dark-theme .memory-card.matched .front-face {
 
 /* Footer */
 footer {
+    --grey-color: #b2bec3;
     background-color: var(--dark-bg);
     color: var(--light-grey); /* Use lighter grey */
     padding: 5rem 5% 2rem; /* More top padding */
@@ -1044,6 +1045,7 @@ footer {
 
 /* Dark Theme */
 body.dark-theme {
+    --grey-color: #b2bec3;
     background: var(--dark-body-gradient); /* Use dark gradient */
     color: var(--dark-text);
     --typewriter-caret-color: var(--primary-light); /* Typewriter caret color for dark theme */
@@ -1164,9 +1166,9 @@ body.dark-theme .filter-btn:hover {
     border-color: var(--primary-color);
 }
 body.dark-theme .filter-btn.active {
-    background-color: var(--primary-light);
+    background-color: var(--primary-color);
     color: white;
-    border-color: var(--primary-light);
+    border-color: var(--primary-color);
     box-shadow: 0 4px 10px rgba(162, 155, 254, 0.2);
 }
 
@@ -1216,12 +1218,10 @@ body.dark-theme .game-thumb {
 
 /* Animate on Scroll Logic */
 .reveal-pending {
-    opacity: 0;
     transform: translateY(30px);
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    transition: transform 0.7s ease-out;
 }
 .reveal-pending.animate {
-    opacity: 1;
     transform: translateY(0);
 }
 /* Stagger animation for grid items */
@@ -1408,7 +1408,6 @@ body.dark-theme .game-thumb {
         transition-delay: 0ms !important;
     }
     .reveal-pending {
-        opacity: 1;
         transform: none;
     }
 }

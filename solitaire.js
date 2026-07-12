@@ -131,6 +131,24 @@
         return tr[key] || fallback || key;
     }
 
+    function updateBoardAria() {
+        const lang = getLang();
+        const tr = t(lang);
+        stockEl.setAttribute('aria-label', tr.solLabelStock || (lang === 'zh' ? '牌堆' : 'Stock'));
+        wasteEl.setAttribute('aria-label', tr.solLabelWaste || (lang === 'zh' ? '废牌' : 'Waste'));
+        tableauEl.setAttribute('aria-label', tr.solLabelTableau || (lang === 'zh' ? '牌列' : 'Tableau'));
+        const foundationsLabel = tr.solLabelFoundations || (lang === 'zh' ? '基础堆' : 'Foundation');
+        foundationEls.forEach((el, index) => el.setAttribute('aria-label', `${foundationsLabel} ${index + 1}`));
+    }
+
+    function activateOnKeyboard(element, action) {
+        element.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            action();
+        });
+    }
+
     function cardLabel(card) {
         if (!card) return '';
         return `${rankLabel(card.rank)}${card.suit}`;
@@ -1771,10 +1789,13 @@
 
     stockEl.addEventListener('click', drawFromStock);
     wasteEl.addEventListener('click', onWasteClick);
+    activateOnKeyboard(stockEl, drawFromStock);
+    activateOnKeyboard(wasteEl, () => wasteEl.click());
     tableauEl.addEventListener('click', onTableauClick);
     tableauEl.addEventListener('dblclick', onDoubleClick);
     for (let i = 0; i < 4; i++) {
         foundationEls[i].addEventListener('click', () => onFoundationClick(i));
+        activateOnKeyboard(foundationEls[i], () => foundationEls[i].click());
     }
     newBtn.addEventListener('click', dealNewGame);
     undoBtn.addEventListener('click', undo);
@@ -1963,6 +1984,7 @@
         const tr = t(lang);
         if (!checkWin()) setStatus(tr.solitaireReady || (lang === 'zh' ? '准备就绪' : 'Ready'));
         setHud();
+        updateBoardAria();
         render();
 
         if (tutorial.open) renderTutorialStep();
@@ -2135,6 +2157,7 @@
         });
     }
 
+    updateBoardAria();
     dealNewGame();
     // auto-show tutorial on first visit
     setTimeout(() => showTutorial(true, false), 300);

@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="在 GameVerse 在线游玩经典纸牌接龙，支持拖放、撤销、提示、自动移动和教程。">
     <title>GameVerse - Solitaire</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="game-page.css">
     <link rel="stylesheet" href="solitaire.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         (function() {
             var currentLang = localStorage.getItem('language') ||
@@ -72,11 +73,11 @@
                                 <div class="sol-pile-row">
                                     <div class="sol-pile">
                                         <div class="sol-pile-label" data-key="solLabelStock">Stock</div>
-                                        <div id="sol-stock" class="sol-slot" aria-label="Stock"></div>
+                                        <div id="sol-stock" class="sol-slot" role="button" tabindex="0" aria-label="Stock"></div>
                                     </div>
                                     <div class="sol-pile">
                                         <div class="sol-pile-label" data-key="solLabelWaste">Waste</div>
-                                        <div id="sol-waste" class="sol-slot" aria-label="Waste"></div>
+                                        <div id="sol-waste" class="sol-slot" role="button" tabindex="0" aria-label="Waste"></div>
                                     </div>
                                 </div>
                                 <div class="sol-msg" data-key="solitaireHint">Click stock to draw. Click a card to select, then click a destination.</div>
@@ -84,15 +85,15 @@
                             <div class="sol-foundations">
                                 <div class="sol-area-label sol-area-label-right" data-key="solLabelFoundations">Foundations</div>
                                 <div class="sol-pile-row" style="justify-content:flex-end;">
-                                    <div id="sol-foundation-0" class="sol-slot" aria-label="Foundation 1"></div>
-                                    <div id="sol-foundation-1" class="sol-slot" aria-label="Foundation 2"></div>
-                                    <div id="sol-foundation-2" class="sol-slot" aria-label="Foundation 3"></div>
-                                    <div id="sol-foundation-3" class="sol-slot" aria-label="Foundation 4"></div>
+                                    <div id="sol-foundation-0" class="sol-slot" role="button" tabindex="0" aria-label="Foundation 1"></div>
+                                    <div id="sol-foundation-1" class="sol-slot" role="button" tabindex="0" aria-label="Foundation 2"></div>
+                                    <div id="sol-foundation-2" class="sol-slot" role="button" tabindex="0" aria-label="Foundation 3"></div>
+                                    <div id="sol-foundation-3" class="sol-slot" role="button" tabindex="0" aria-label="Foundation 4"></div>
                                 </div>
                             </div>
                         </div>
                         <div class="sol-area-label" data-key="solLabelTableau">Tableau</div>
-                        <div id="sol-tableau" class="sol-tableau" aria-label="Tableau"></div>
+                        <div id="sol-tableau" class="sol-tableau" role="group" aria-label="Tableau"></div>
                     </div>
                 </div>
                 <div class="game-panel">
