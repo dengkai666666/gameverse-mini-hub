@@ -118,6 +118,8 @@
         const info = winnerInfo();
         if (info && (info.winner || info.draw)) {
             finished = true;
+            localStorage.setItem('tttGamesPlayed', String(Number(localStorage.getItem('tttGamesPlayed') || '0') + 1));
+            document.dispatchEvent(new Event('gameverseStatsUpdated'));
         } else {
             nextPlayer();
         }

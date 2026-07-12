@@ -98,6 +98,7 @@
     let hint = null; // { sourceId, target: {type, index} }
     let lastMovedCardId = null;
     let lastMove = null; // { type, cardId?, fromCol?, toCol?, revealed?, emptied? }
+    let winRecorded = false;
     let suppressClickUntil = 0;
 
     const dragState = {
@@ -1326,6 +1327,7 @@
         score = 0;
         moves = 0;
         history = [];
+        winRecorded = false;
         undoBtn.disabled = true;
 
         for (let col = 0; col < 7; col++) {
@@ -1487,6 +1489,11 @@
             const lang = getLang();
             const tr = t(lang);
             setStatus(tr.solitaireWin || (lang === 'zh' ? '恭喜通关！' : 'You win!'));
+            if (!winRecorded && !demo.active && !practice.active) {
+                winRecorded = true;
+                localStorage.setItem('solitaireWins', String(Number(localStorage.getItem('solitaireWins') || '0') + 1));
+                document.dispatchEvent(new Event('gameverseStatsUpdated'));
+            }
         }
 
         // ensure move animation doesn't re-trigger on the next render

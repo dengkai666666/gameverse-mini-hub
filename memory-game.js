@@ -288,6 +288,15 @@
             this.clearTimer();
             this.gameActive = false; // Stop game interaction
 
+            const bestMoves = Number(localStorage.getItem('memoryBestMoves') || '0');
+            const bestTime = Number(localStorage.getItem('memoryBestTime') || '0');
+            if (!bestMoves || this.moves < bestMoves || (this.moves === bestMoves && this.timer < bestTime)) {
+                localStorage.setItem('memoryBestMoves', String(this.moves));
+                localStorage.setItem('memoryBestTime', String(this.timer));
+            }
+            localStorage.setItem('memoryWins', String(Number(localStorage.getItem('memoryWins') || '0') + 1));
+            document.dispatchEvent(new Event('gameverseStatsUpdated'));
+
             this.updateResultText();
             if (this.resultElement) {
                 this.resultElement.hidden = false;

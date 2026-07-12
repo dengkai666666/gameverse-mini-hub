@@ -124,6 +124,34 @@ function getTranslationsForLang(lang) {
     return source[lang] || source['en'] || {}; // Fallback to English if lang not found
 }
 
+function readStoredNumber(key) {
+    const value = Number(localStorage.getItem(key) || '0');
+    return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function updateLocalProgress() {
+    const lang = getCurrentLanguage();
+    const values = {
+        snake: String(readStoredNumber('snakeHighScore')),
+        g2048: String(readStoredNumber('g2048BestScore')),
+        flappy: String(readStoredNumber('flappyBestScore')),
+        ttt: String(readStoredNumber('tttGamesPlayed')),
+        solitaire: String(readStoredNumber('solitaireWins'))
+    };
+    const memoryMoves = readStoredNumber('memoryBestMoves');
+    const memoryTime = readStoredNumber('memoryBestTime');
+    values.memory = memoryMoves
+        ? (lang === 'zh' ? `${memoryMoves} 步 · ${memoryTime} 秒` : `${memoryMoves} moves · ${memoryTime}s`)
+        : '—';
+
+    document.querySelectorAll('[data-stat]').forEach(element => {
+        element.textContent = values[element.dataset.stat] ?? '0';
+    });
+}
+
+window.addEventListener('pageshow', updateLocalProgress);
+document.addEventListener('gameverseStatsUpdated', updateLocalProgress);
+
 // Typewriter effect function
 function startTypewriterEffect(element, text) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -271,6 +299,8 @@ function updatePageLanguage(lang) {
         const copyrightText = translationData.allRightsReserved || 'All Rights Reserved.'; // Fallback text
         copyrightElement.textContent = `\u00A9 ${year} GameVerse. ${copyrightText}`;
     }
+
+    updateLocalProgress();
 
     // --- Dispatch event for other scripts (like memory game) ---
     const event = new CustomEvent('languageChanged', { detail: { language: lang } });
