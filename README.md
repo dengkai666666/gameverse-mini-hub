@@ -1,95 +1,82 @@
-# GameVerse - Mini Game Collection
+# GameVerse — Open Source Browser Mini Games
 
-GameVerse is a modern, responsive website that hosts a collection of browser-based mini-games. Currently, it features a Memory Match game, with plans to add more games in the future.
+<p align="center">
+  <a href="https://dengkai666666.github.io/gameverse-mini-hub/"><strong>Live Demo</strong></a>
+  ·
+  <a href="CONTRIBUTING.md"><strong>Contributing</strong></a>
+  ·
+  <a href="LICENSE"><strong>MIT License</strong></a>
+</p>
 
-## Features
+![GameVerse preview](assets/gameverse-preview.webp)
 
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Dark/Light Theme**: Toggle between dark and light modes with user preference saved
-- **Game Filtering**: Filter games by category
-- **Smooth Animations**: Scroll animations and interactive UI elements
-- **Memory Match Game**: A fully functional memory card matching game
-- **Tic Tac Toe**: Play two-player or vs computer
-- **Snake**: Classic snake game with score + high score
-- **2048**: Swipe/keyboard controls with score tracking
-- **Flappy Bird**: Canvas arcade game with best score
-- **Solitaire**: Click-to-move Klondike-style solitaire
+GameVerse is a polished, bilingual mini-game collection that runs entirely in the browser. It has no backend, no build step, no database and no paid service dependency—just static HTML, CSS and JavaScript that can be deployed on any free frontend host.
 
-## Technologies Used
+> 中文简介：GameVerse 是一个完全静态、无需后端的双语小游戏合集，针对手机触控、深浅主题、键盘操作和无障碍体验进行了优化。
 
-- HTML5
-- CSS3 (with CSS variables for theming)
-- JavaScript (ES6+)
-- Font Awesome for icons
-- Google Fonts
+## Play now
 
-## Memory Match Game
+**https://dengkai666666.github.io/gameverse-mini-hub/**
 
-The featured game is a classic memory matching game:
-- Click cards to flip them
-- Find matching pairs of cards
-- Track your moves and time
-- Reset the game at any time
+## Games
 
-## Future Games
+| Game | Highlights | Controls |
+| --- | --- | --- |
+| Memory Match | Timer, move counter, accessible cards | Tap / click / keyboard |
+| Snake | Difficulty, obstacles, walls, portals, high score | Arrow keys / touch pad |
+| Tic Tac Toe | Two-player and computer modes | Tap / click / keyboard |
+| 2048 | Animated moves, undo, hints, best score | Swipe / arrows / WASD |
+| Flappy Bird | Responsive canvas and saved best score | Tap / click / Space |
+| Solitaire | Drag, click-to-move, undo, hints, auto move, tutorial | Touch / mouse / keyboard shortcuts |
 
-The website includes placeholders for several upcoming games:
-- Snake
-- Tic Tac Toe
-- Flappy Bird
-- 2048
-- Solitaire
+## Why GameVerse
 
-## Setup and Usage
+- **Frontend only** — deploy the repository directly to GitHub Pages.
+- **Mobile first** — responsive layouts, large touch targets and swipe controls.
+- **Bilingual** — instant Chinese/English switching with saved preference.
+- **Accessible** — semantic controls, keyboard navigation, live status text and reduced-motion support.
+- **Theme aware** — polished light and dark themes with persistent settings.
+- **Zero install** — no package manager, framework or build pipeline required.
+- **Offline-friendly foundation** — relative assets and an installable web app manifest.
 
-1. Clone this repository
-2. Open the `index.html` file in your browser
-
-Optional (recommended): run a local static server (avoids some `file://` browser limitations):
+## Run locally
 
 ```bash
 python -m http.server 8000
 ```
 
-Then open `http://localhost:8000` and click `index.html`.
+Open `http://localhost:8000/`. You can also open `index.html` directly, although a local static server gives the most consistent browser behavior.
 
-No build process or server is required to run this project as it's built with vanilla HTML, CSS, and JavaScript.
+## Architecture
 
-## Project Structure
-
-```
-├── index.html               # Main HTML file
-├── styles.css               # Main site styles
-├── game-cards.css           # Game card preview styles
-├── game-page.css            # Shared styles for standalone game pages
-├── script.js                # General website JavaScript
-├── memory-game.js           # Memory Match game JavaScript
-├── 2048.html                # 2048 game page
-├── 2048-anim.js             # 2048 game logic (animations/undo/hint)
-├── 2048.css                 # 2048 styles
-├── tic-tac-toe.html         # Tic Tac Toe game page
-├── tic-tac-toe.js           # Tic Tac Toe game logic
-├── snake.html               # Snake game page
-├── snake.js                 # Snake game logic
-├── flappy-bird.html         # Flappy Bird game page
-├── flappy-bird.js           # Flappy Bird game logic
-├── solitaire.html           # Solitaire game page
-├── solitaire.js             # Solitaire game logic
-├── solitaire.css            # Solitaire styles
-├── translations.js          # Primary translations (zh/en)
-├── fallback-translations.js # ASCII-only fallback translations
-├── test-encoding.html       # Encoding sanity check page
-└── README.md                # Project documentation
+```text
+index.html / styles.css / script.js     Homepage, themes, filtering and i18n
+game-page.css                           Shared standalone-game layout
+translations.js                         Chinese and English strings
+memory-game.js                          Memory Match
+snake.html / snake.js                   Snake
+tic-tac-toe.html / tic-tac-toe.js       Tic Tac Toe
+2048.html / 2048.css / 2048-anim.js     2048
+flappy-bird.html / flappy-bird.js        Flappy Bird
+solitaire.html / solitaire.css / solitaire.js
+site.webmanifest / favicon.svg           Installable app metadata
 ```
 
-## Browser Compatibility
+## Quality targets
 
-The website is compatible with all modern browsers:
-- Chrome
-- Firefox
-- Safari
-- Edge
+- Works without a backend server.
+- No horizontal overflow at 390px mobile width.
+- Keyboard-accessible interactive controls.
+- Light and dark theme contrast checks.
+- JavaScript syntax validation with `node --check`.
+- Lighthouse accessibility, best-practices and SEO audits.
+
+## Contributing
+
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before adding a game or changing shared UI.
+
+If you enjoy GameVerse, please **star the repository** and share the live demo.
 
 ## License
 
-This project is open source and available under the MIT License. 
+[MIT](LICENSE) © 2026 GameVerse contributors

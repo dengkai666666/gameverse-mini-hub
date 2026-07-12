@@ -4,8 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="GameVerse 是一个支持中英文与深浅主题切换的轻量浏览器小游戏合集，包含记忆配对、贪吃蛇、2048、井字棋、飞鸟和纸牌接龙。">
+    <meta name="theme-color" content="#6c5ce7">
+    <meta property="og:title" content="GameVerse — Open Source Browser Mini Games">
+    <meta property="og:description" content="Six polished mini-games, bilingual UI, dark mode, mobile controls, and zero backend dependencies.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dengkai666666.github.io/gameverse-mini-hub/">
+    <meta property="og:image" content="https://dengkai666666.github.io/gameverse-mini-hub/assets/gameverse-preview.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://dengkai666666.github.io/gameverse-mini-hub/">
     <title>GameVerse - Mini Game Collection</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="site.webmanifest">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="game-cards.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -54,9 +63,13 @@
     <main>
         <section class="hero">
             <div class="hero-content">
+                <div class="hero-badge"><i class="fab fa-github" aria-hidden="true"></i><span data-key="openSourceBadge">Open source · No backend required</span></div>
                 <h1 data-key="welcome">Welcome to GameVerse</h1>
                 <p class="typewriter-text" data-key="discover"></p>
-                <a href="#games" class="btn primary-btn" data-key="playNow">Play Now</a>
+                <div class="hero-actions">
+                    <a href="#games" class="btn primary-btn" data-key="playNow">Play Now</a>
+                    <a href="https://github.com/dengkai666666/gameverse-mini-hub" class="btn source-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-github" aria-hidden="true"></i><span data-key="viewSource">View Source</span></a>
+                </div>
             </div>
             <div class="hero-image">
                 <div class="hero-animation">
@@ -341,22 +354,15 @@
                 </ul>
             </div>
             <div class="footer-newsletter">
-                 <h3 data-key="stayUpdated">Stay Updated</h3>
-                <p data-key="subscribeNewsletter">Subscribe to our newsletter for the latest games and updates</p>
-                <form class="newsletter-form">
-                    <label for="newsletter-email" class="sr-only" data-key="yourEmail">Your email address</label>
-                    <input id="newsletter-email" name="email" type="email" placeholder="Your email address" data-key="yourEmail" autocomplete="email" required>
-                     <button type="submit" class="btn" data-key="subscribe">Subscribe</button>
-                </form>
+                 <h3 data-key="openSourceTitle">Open Source</h3>
+                <p data-key="openSourceBody">GameVerse runs entirely in your browser. Star the project or contribute a new game on GitHub.</p>
+                <a href="https://github.com/dengkai666666/gameverse-mini-hub" class="btn github-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-github" aria-hidden="true"></i><span data-key="starOnGitHub">Star on GitHub</span></a>
             </div>
         </div>
         <div class="footer-bottom">
             <p>&copy; 2025 GameVerse. All Rights Reserved.</p>
             <div class="social-links">
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+                <a href="https://github.com/dengkai666666/gameverse-mini-hub" target="_blank" rel="noopener noreferrer" aria-label="GameVerse on GitHub"><i class="fab fa-github"></i></a>
             </div>
         </div>
     </footer>

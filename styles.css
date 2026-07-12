@@ -328,6 +328,50 @@ nav {
     animation: slideInFromLeft 0.8s ease-out forwards; /* Entrance animation */
 }
 
+.hero-badge {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid rgba(108, 92, 231, 0.22);
+    border-radius: 999px;
+    background: rgba(108, 92, 231, 0.08);
+    color: var(--primary-dark);
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+body.dark-theme .hero-badge {
+    color: var(--primary-light);
+    border-color: rgba(162, 155, 254, 0.3);
+    background: rgba(162, 155, 254, 0.1);
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    align-items: center;
+}
+
+.source-btn,
+.github-btn {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    background: #24292f;
+    color: #fff;
+}
+
+.source-btn:hover,
+.github-btn:hover {
+    background: #000;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
 .hero-content h1 {
     font-size: clamp(2.5rem, 5vw, 4rem); /* Responsive font size */
     margin-bottom: 1.2rem;
@@ -966,6 +1010,10 @@ footer {
     margin-bottom: 1rem;
 }
 
+.footer-newsletter .github-btn {
+    margin-top: 0.5rem;
+}
+
 .newsletter-form {
     display: flex;
     margin-top: 1.5rem; /* Space above form */
@@ -1318,6 +1366,11 @@ body.dark-theme .game-thumb {
 
     .nav-controls { gap: 0.5rem; }
 
+    .hero-image { display: none; }
+    .hero-content { order: 1; }
+    .hero-badge { margin-inline: auto; }
+    .hero-actions { justify-content: center; }
+
     .typewriter-text {
         letter-spacing: 0.1em; /* Reduce letter spacing on smaller screens */
         margin: 0 auto;
@@ -1470,6 +1523,10 @@ body.dark-theme .game-thumb {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.hero-actions .primary-btn {
+    margin: 0;
 }
 
 .hero-content .primary-btn.show {

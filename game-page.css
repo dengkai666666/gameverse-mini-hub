@@ -45,6 +45,16 @@ body.dark-theme .game-shell {
     align-items: center;
 }
 
+.game-controls .btn {
+    background: var(--primary-color);
+    color: #fff;
+    min-height: 44px;
+}
+
+.game-controls .btn:hover {
+    background: var(--primary-dark);
+}
+
 .game-controls label {
     font-weight: 600;
     color: var(--light-text);
@@ -70,6 +80,63 @@ body.dark-theme .game-controls label {
 
 body.dark-theme .game-controls select {
     border-color: rgba(255, 255, 255, 0.15);
+    background: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+.game-options {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(108, 92, 231, 0.14);
+    border-radius: var(--border-radius-md);
+    background: rgba(108, 92, 231, 0.04);
+}
+
+body.dark-theme .game-options {
+    border-color: rgba(162, 155, 254, 0.18);
+    background: rgba(162, 155, 254, 0.06);
+}
+
+.option-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1rem;
+    align-items: center;
+}
+
+.option-group + .option-group {
+    margin-top: 0.75rem;
+}
+
+.option-group label {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    color: var(--light-text);
+    font-weight: 600;
+}
+
+body.dark-theme .option-group label {
+    color: var(--dark-text);
+}
+
+.option-group input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--primary-color);
+}
+
+.option-group select {
+    min-height: 42px;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--light-grey);
+    border-radius: 8px;
+    background: var(--light-card-bg);
+    color: var(--light-text);
+}
+
+body.dark-theme .option-group select {
+    border-color: rgba(255, 255, 255, 0.18);
     background: var(--dark-bg);
     color: var(--dark-text);
 }
@@ -247,3 +314,79 @@ body.dark-theme .snake-dpad button {
 .snake-dpad .left { grid-column: 1; grid-row: 2; }
 .snake-dpad .down { grid-column: 2; grid-row: 3; }
 .snake-dpad .right { grid-column: 3; grid-row: 2; }
+
+@media (max-width: 600px) {
+    .game-page-main {
+        padding: 1.5rem 1rem 2.5rem;
+    }
+
+    .game-shell {
+        padding: 1.15rem;
+        border-radius: 16px;
+    }
+
+    .game-shell h1 {
+        font-size: clamp(1.75rem, 9vw, 2.15rem);
+    }
+
+    .game-subtitle {
+        margin-bottom: 1rem;
+        font-size: 0.98rem;
+    }
+
+    .game-toolbar {
+        align-items: stretch;
+        margin-bottom: 1rem;
+    }
+
+    .game-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+        gap: 0.65rem;
+    }
+
+    .game-controls > label {
+        align-self: center;
+    }
+
+    .game-controls .btn,
+    .game-controls select {
+        width: 100%;
+    }
+
+    .game-status {
+        width: 100%;
+        min-height: 1.5em;
+        text-align: left;
+    }
+
+    .game-panel {
+        padding: 0.8rem;
+    }
+
+    .option-group {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem 0.65rem;
+    }
+
+    .option-group label {
+        min-height: 36px;
+        font-size: 0.9rem;
+        line-height: 1.35;
+    }
+
+    .option-group:last-child {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .ttt-board {
+        gap: 0.55rem;
+    }
+
+    .ttt-cell {
+        min-height: 78px;
+        border-radius: 12px;
+    }
+}

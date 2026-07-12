@@ -413,3 +413,48 @@ body.dark-theme .sol-tutorial-step {
     border-radius: 16px;
     pointer-events: none;
 }
+
+@media (max-width: 700px) {
+    .sol-wrap {
+        --sol-card-w: clamp(58px, 19vw, 70px);
+    }
+
+    .sol-top,
+    .sol-piles {
+        grid-template-columns: 1fr;
+    }
+
+    .sol-pile-row {
+        flex-wrap: nowrap;
+    }
+
+    .sol-foundations {
+        align-items: flex-start;
+    }
+
+    .sol-area-label-right {
+        text-align: left;
+    }
+
+    .sol-foundations .sol-pile-row {
+        width: 100%;
+        justify-content: flex-start !important;
+        overflow-x: auto;
+        padding: 0.2rem 0.15rem 0.4rem;
+    }
+
+    .sol-msg {
+        line-height: 1.55;
+    }
+
+    .sol-tableau {
+        grid-template-columns: repeat(7, minmax(58px, 70px));
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        padding: 0.25rem 0.1rem 0.75rem;
+    }
+
+    .sol-col {
+        min-height: 360px;
+    }
+}

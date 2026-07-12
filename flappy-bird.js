@@ -245,8 +245,8 @@
         ctx.restore();
 
         // score text
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.font = '700 28px Poppins, sans-serif';
+        ctx.fillStyle = isDark ? '#ffffff' : 'rgba(0,0,0,0.72)';
+        ctx.font = '700 28px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.fillText(String(score), W / 2, 14);
@@ -255,7 +255,7 @@
             ctx.fillStyle = 'rgba(0,0,0,0.22)';
             ctx.fillRect(0, 0, W, H);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '700 22px Poppins, sans-serif';
+            ctx.font = '700 22px system-ui, sans-serif';
             const lang = getLang();
             const tr = t(lang);
             ctx.fillText(tr.flappyTapToStart || (lang === 'zh' ? '点击/空格开始' : 'Click/Space to start'), W / 2, H / 2 - 10);
@@ -265,13 +265,13 @@
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
             ctx.fillRect(0, 0, W, H);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '700 28px Poppins, sans-serif';
+            ctx.font = '700 28px system-ui, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const lang = getLang();
             const tr = t(lang);
             ctx.fillText(tr.gameOver || (lang === 'zh' ? '游戏结束' : 'Game Over'), W / 2, H / 2 - 16);
-            ctx.font = '600 18px Poppins, sans-serif';
+            ctx.font = '600 18px system-ui, sans-serif';
             ctx.fillText(tr.flappyRestartHint || (lang === 'zh' ? '点击新游戏重新开始' : 'Press New Game to restart'), W / 2, H / 2 + 18);
         }
     }
