@@ -1,5 +1,9 @@
 # GameVerse — Open Source Browser Mini Games
 
+[![Play GameVerse](https://img.shields.io/badge/PLAY-LIVE%20DEMO-6c5ce7?style=for-the-badge)](https://dengkai666666.github.io/gameverse-mini-hub/)
+[![GitHub stars](https://img.shields.io/github/stars/dengkai666666/gameverse-mini-hub?style=for-the-badge&logo=github)](https://github.com/dengkai666666/gameverse-mini-hub/stargazers)
+[![MIT License](https://img.shields.io/badge/LICENSE-MIT-007f7b?style=for-the-badge)](LICENSE)
+
 <p align="center">
   <a href="https://dengkai666666.github.io/gameverse-mini-hub/"><strong>Live Demo</strong></a>
   ·

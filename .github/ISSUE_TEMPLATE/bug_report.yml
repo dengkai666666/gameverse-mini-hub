@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible GameVerse problem
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: dropdown
+    id: game
+    attributes:
+      label: Affected area
+      options:
+        - Homepage
+        - Memory Match
+        - Snake
+        - Tic Tac Toe
+        - 2048
+        - Flappy Bird
+        - Solitaire
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the expected result and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open...\n2. Tap...\n3. See..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: "Example: Safari 18, iPhone 15"
+    validations:
+      required: true

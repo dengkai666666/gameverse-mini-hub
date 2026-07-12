@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dengkai666666.github.io/gameverse-mini-hub/sitemap.xml
