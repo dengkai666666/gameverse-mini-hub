@@ -13,7 +13,7 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="game-page.css">
-    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="vendor/fontawesome/css/icons.min.css">
     <script>
         (function() {
             var currentLang = localStorage.getItem('language') ||
@@ -24,6 +24,7 @@
     </script>
 </head>
 <body>
+    <script>try{if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-theme')}catch(e){}</script>
     <header>
         <nav>
             <div class="logo">

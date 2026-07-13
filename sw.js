@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gameverse-v7';
+const CACHE_NAME = 'gameverse-v8';
 
 const PRECACHE_URLS = [
     './',
@@ -24,10 +24,9 @@ const PRECACHE_URLS = [
     './favicon.svg',
     './site.webmanifest',
     './assets/gameverse-preview.webp',
-    './vendor/fontawesome/css/all.min.css',
-    './vendor/fontawesome/webfonts/fa-solid-900.woff2',
-    './vendor/fontawesome/webfonts/fa-regular-400.woff2',
-    './vendor/fontawesome/webfonts/fa-brands-400.woff2'
+    './vendor/fontawesome/css/icons.min.css',
+    './vendor/fontawesome/webfonts/fa-solid-900-slim.woff2',
+    './vendor/fontawesome/webfonts/fa-brands-400-slim.woff2'
 ];
 
 self.addEventListener('install', event => {
@@ -51,18 +50,32 @@ self.addEventListener('fetch', event => {
     const requestUrl = new URL(event.request.url);
     if (requestUrl.origin !== self.location.origin) return;
 
+    const fetchAndCache = () => fetch(event.request).then(response => {
+        if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+    });
+
+    // 页面导航保持网络优先以确保内容新鲜；静态资源缓存优先并后台更新（stale-while-revalidate）
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetchAndCache().catch(async () =>
+                (await caches.match(event.request)) || caches.match('./index.html')
+            )
+        );
+        return;
+    }
+
     event.respondWith(
-        fetch(event.request).then(response => {
-            if (response.ok) {
-                const copy = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        caches.match(event.request).then(cached => {
+            const network = fetchAndCache();
+            if (cached) {
+                network.catch(() => {});
+                return cached;
             }
-            return response;
-        }).catch(async () => {
-            const cached = await caches.match(event.request);
-            if (cached) return cached;
-            if (event.request.mode === 'navigate') return caches.match('./index.html');
-            return Response.error();
+            return network.catch(() => Response.error());
         })
     );
 });
