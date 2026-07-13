@@ -605,17 +605,16 @@ body.dark-theme .share-btn {
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* Smoother flip */
     cursor: pointer;
-    border-radius: var(--border-radius-sm); /* Match the faces */
-    min-height: 60px; /* 确保有最小高度 */
-    min-width: 60px; /* 确保有最小宽度 */
-    height: 100%; /* 填充可用空间 */
+    border-radius: 10px;
+    overflow: hidden;
     z-index: 1; /* 确保卡片在加载指示器之上 */
-    background-color: var(--light-card-bg); /* 确保有背景色 */
-    box-shadow: var(--shadow-light); /* 添加阴影 */
+    background: transparent;
+    box-shadow: 0 5px 14px rgba(45, 42, 74, 0.14);
 }
 
 .memory-card .front-face,
 .memory-card .back-face {
+    inset: 0;
     width: 100%;
     height: 100%;
     position: absolute;
@@ -623,13 +622,13 @@ body.dark-theme .share-btn {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: var(--border-radius-sm); /* Smaller radius for cards */
+    border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .memory-card .front-face {
-    background-color: var(--light-card-bg);
+    background: linear-gradient(145deg, #ffffff, #f0edff);
     transform: rotateY(180deg);
     border: 2px solid var(--primary-light);
 }
