@@ -440,3 +440,48 @@ body.dark-theme .snake-dpad button {
         margin-bottom: 0.85rem;
     }
 }
+
+/* 桌面端：压缩纵向留白，并让棋盘/画布受视口高度约束，使主视图一屏可见 */
+@media (min-width: 900px) {
+    .game-page-main {
+        padding: 1.25rem 5% 2rem;
+    }
+
+    .game-shell {
+        padding: 1.25rem 2rem 1.5rem;
+    }
+
+    .game-shell h1 {
+        font-size: 1.6rem;
+    }
+
+    .game-subtitle {
+        margin-bottom: 1rem;
+    }
+
+    .game-toolbar {
+        margin-bottom: 0.9rem;
+    }
+
+    .game-options {
+        margin-bottom: 0.75rem;
+    }
+
+    /* canvas 为替换元素：max-width + max-height 同时约束时自动保持宽高比 */
+    .snake-canvas {
+        width: auto;
+        max-width: min(520px, 100%);
+        max-height: max(320px, calc(100vh - 22rem));
+    }
+
+    .g2048-board {
+        width: min(520px, 100%, max(320px, calc(100vh - 26rem)));
+    }
+}
+
+/* 键鼠环境无需触屏方向键，方向操作交给键盘 */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+    .snake-dpad {
+        display: none;
+    }
+}

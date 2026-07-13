@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gameverse-v8';
+const CACHE_NAME = 'gameverse-v9';
 
 const PRECACHE_URLS = [
     './',
