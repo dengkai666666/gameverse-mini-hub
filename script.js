@@ -85,8 +85,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
                 e.preventDefault();
+                const top = targetElement.getBoundingClientRect().top + window.scrollY - 80; // 相对文档绝对位置，避免 offsetParent 偏差导致定位错误
                 window.scrollTo({
-                    top: targetElement.offsetTop - 80, // Adjusted offset for sticky header
+                    top,
                     behavior: 'smooth'
                 });
             }
