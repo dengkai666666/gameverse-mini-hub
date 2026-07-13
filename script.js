@@ -96,11 +96,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 // --- Animate on Scroll Logic ---
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.games-grid .game-card, .developer-grid .developer-card').forEach((card, index) => {
+    document.querySelectorAll('.games-grid .game-card').forEach((card, index) => {
         card.style.setProperty('--card-index', index);
     });
 
-    const elements = document.querySelectorAll('.section-header, .game-card, .featured-game-card, .developer-card');
+    const elements = document.querySelectorAll('.section-header, .game-card, .featured-game-card');
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
         elements.forEach(element => element.classList.add('animate'));
         return;

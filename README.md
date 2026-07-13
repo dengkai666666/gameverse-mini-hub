@@ -1,5 +1,9 @@
 # GameVerse — Open Source Browser Mini Games
 
+<p align="center">
+  <strong>English</strong> · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 [![Play GameVerse](https://img.shields.io/badge/PLAY-LIVE%20DEMO-6c5ce7?style=for-the-badge)](https://dengkai666666.github.io/gameverse-mini-hub/)
 [![GitHub stars](https://img.shields.io/github/stars/dengkai666666/gameverse-mini-hub?style=for-the-badge&logo=github)](https://github.com/dengkai666666/gameverse-mini-hub/stargazers)
 [![MIT License](https://img.shields.io/badge/LICENSE-MIT-007f7b?style=for-the-badge)](LICENSE)
@@ -17,6 +21,8 @@
 GameVerse is a polished, bilingual mini-game collection that runs entirely in the browser. It has no backend, no build step, no database and no paid service dependency—just static HTML, CSS and JavaScript that can be deployed on any free frontend host.
 
 > 中文简介：GameVerse 是一个完全静态、无需后端的双语小游戏合集，针对手机触控、深浅主题、键盘操作和无障碍体验进行了优化。
+
+**Maintainer:** [@dengkai666666](https://github.com/dengkai666666)
 
 ## Play now
 

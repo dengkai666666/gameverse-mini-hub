@@ -4,7 +4,6 @@ const translations = {
         home: '首页',
         games: '游戏',
         featured: '精选',
-        developersLink: '开发团队', // Added for nav link
         about: '关于',
         aboutTitle: '关于 GameVerse',
         aboutSubtitle: '小巧、快速、无需构建的小游戏合集站点。',
@@ -206,7 +205,6 @@ const translations = {
         resetGame: '重置游戏',
         congratulations: '恭喜！您用了 {moves} 步和 {seconds} 秒完成了游戏。',
         comingSoon: '即将推出',
-        ourDevelopers: '本站开发人员', // Added
         subscribeNewsletter: '订阅我们的通讯获取最新游戏和更新',
         yourEmail: '您的电子邮箱地址',
         subscribe: '订阅',
@@ -235,7 +233,6 @@ const translations = {
         home: 'Home',
         games: 'Games',
         featured: 'Featured',
-        developersLink: 'Developers', // Added for nav link
         about: 'About',
         aboutTitle: 'About GameVerse',
         aboutSubtitle: 'A small, fast, no-build mini-game hub.',
@@ -437,7 +434,6 @@ const translations = {
         resetGame: 'Reset Game',
         congratulations: 'Congratulations! You completed the game in {moves} moves and {seconds} seconds.',
         comingSoon: 'Coming Soon',
-        ourDevelopers: 'Our Developers', // Added
         subscribeNewsletter: 'Subscribe to our newsletter for the latest games and updates',
         yourEmail: 'Your email address',
         subscribe: 'Subscribe',

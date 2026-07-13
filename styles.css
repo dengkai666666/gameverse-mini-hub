@@ -723,61 +723,6 @@ body.dark-theme .memory-result {
     font-size: 0.95rem;
 }
 
-/* Developer Section - NEW Grid Layout */
-.developer-section {
-    padding: 4rem 5% 5rem; /* Adjust padding */
-    background-color: var(--light-bg); /* Match featured section */
-    border-top: var(--section-border);
-}
-
-.developer-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Responsive grid */
-    gap: 2.5rem; /* Increased gap */
-    max-width: 1000px; /* Limit width */
-    margin: 2rem auto 0; /* Center grid and add top margin */
-}
-
-.developer-card {
-    background-color: var(--light-card-bg);
-    border-radius: var(--border-radius-md);
-    padding: 2rem 1.5rem;
-    text-align: center;
-    box-shadow: var(--shadow-light);
-    transition: var(--transition-std);
-    border: 1px solid transparent; /* Placeholder for hover border */
-}
-
-.developer-card:hover {
-    transform: translateY(-8px) scale(1.03); /* More pronounced hover effect */
-    box-shadow: 0 12px 28px rgba(108, 92, 231, 0.2);
-    border-color: var(--primary-light);
-}
-
-.developer-icon {
-    font-size: 3rem;
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    display: inline-block; /* Allows transform */
-    transition: transform var(--transition-fast);
-}
-.developer-card:hover .developer-icon {
-    transform: rotateY(360deg) scale(1.1); /* Rotate icon on hover */
-}
-
-
-.developer-name {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--light-text);
-    margin-bottom: 0.5rem;
-}
-
-.developer-role { /* Optional role text */
-    font-size: 0.9rem;
-    color: var(--grey-color);
-}
-
 /* About Section */
 .about-section {
     padding: 4.5rem 5%;
@@ -1257,21 +1202,18 @@ body.dark-theme section:not(:first-child)::before {
 
 body.dark-theme .featured-section,
 body.dark-theme .games-section,
-body.dark-theme .developer-section,
 body.dark-theme .about-section {
     background-color: var(--dark-bg); /* Match body background */
     border-top: var(--dark-section-border);
 }
 
 body.dark-theme .featured-game-card,
-body.dark-theme .game-card,
-body.dark-theme .developer-card {
+body.dark-theme .game-card {
     background-color: var(--dark-card-bg);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); /* Dark theme shadow */
 }
 body.dark-theme .featured-game-card:hover,
-body.dark-theme .game-card:hover,
-body.dark-theme .developer-card:hover {
+body.dark-theme .game-card:hover {
      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
      border-color: var(--primary-color); /* Use darker primary for hover border */
 }
@@ -1280,17 +1222,6 @@ body.dark-theme .developer-card:hover {
 body.dark-theme .game-info h3 {
     color: var(--dark-text);
 }
-body.dark-theme .developer-name {
-    color: var(--dark-text);
-}
-body.dark-theme .developer-role {
-    color: var(--grey-color);
-}
-body.dark-theme .developer-icon {
-    color: var(--primary-light); /* Lighter icon color */
-}
-
-
 body.dark-theme .filter-btn {
     background-color: var(--dark-card-bg);
     color: var(--grey-color);
@@ -1362,7 +1293,7 @@ body.dark-theme .game-thumb {
     transform: translateY(0);
 }
 /* Stagger animation for grid items */
-.games-grid .game-card, .developer-grid .developer-card {
+.games-grid .game-card {
     transition-delay: calc(var(--card-index) * 0.1s); /* Slower stagger */
 }
 
@@ -1393,11 +1324,6 @@ body.dark-theme .game-thumb {
     }
     .floating-icon { display: none; } /* Hide floating icons on smaller screens */
 
-
-    .developer-grid {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-    }
 }
 
 @media (max-width: 768px) {
@@ -1444,17 +1370,9 @@ body.dark-theme .game-thumb {
     }
     .social-links { justify-content: center; }
 
-    .developer-grid {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1.5rem;
-    }
-
     .progress-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-     .developer-card { padding: 1.5rem 1rem; }
-     .developer-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-     .developer-name { font-size: 1.1rem; }
 
     .nav-controls { gap: 0.5rem; }
 
@@ -1490,11 +1408,6 @@ body.dark-theme .game-thumb {
     .filter-btn {
         padding: 0.5rem 1.2rem;
         font-size: 0.85rem;
-    }
-
-    .developer-grid {
-        grid-template-columns: 1fr; /* Single column */
-        gap: 1.5rem;
     }
 
     .game-board {
