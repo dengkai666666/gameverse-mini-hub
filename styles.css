@@ -50,6 +50,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
     font-size: 16px; /* Base font size */
 }
 
@@ -126,7 +127,7 @@ img {
 
 /* Section Styling */
 section {
-    padding: 4rem 5%; /* Reduced top/bottom padding slightly */
+    padding: 3rem 5%;
     max-width: 1400px;
     margin: 0 auto;
     position: relative; /* For potential pseudo-elements */
@@ -147,7 +148,7 @@ section:not(:first-child)::before {
 
 .section-header {
     text-align: center;
-    margin-bottom: 3.5rem; /* Increased spacing */
+    margin-bottom: 2rem;
 }
 
 .section-header h2 {
@@ -501,7 +502,7 @@ body.dark-theme .share-btn {
 /* Featured Section */
 .featured-section {
     background-color: var(--light-bg); /* Ensure background color */
-    padding-top: 5rem; /* More space above */
+    padding-top: 3rem;
     border-top: var(--section-border);
 }
 
@@ -519,6 +520,7 @@ body.dark-theme .share-btn {
     width: 100%;
     transition: transform var(--transition-std), box-shadow var(--transition-std);
 }
+
 .featured-game-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
@@ -725,7 +727,7 @@ body.dark-theme .memory-result {
 
 /* About Section */
 .about-section {
-    padding: 4.5rem 5%;
+    padding: 3rem 5%;
     background-color: var(--light-card-bg);
     border-top: var(--section-border);
 }
@@ -745,7 +747,7 @@ body.dark-theme .memory-result {
 
 /* Games Section */
 .games-section {
-    padding: 5rem 5%;
+    padding: 3rem 5%;
     background-color: var(--light-bg); /* Ensure background */
     border-top: var(--section-border);
 }
@@ -1328,6 +1330,7 @@ body.dark-theme .game-thumb {
 
 @media (max-width: 768px) {
     html { font-size: 14px; }
+    #featured-game { scroll-margin-top: 5rem; }
     .nav-links {
         order: 3;
         width: 100%;

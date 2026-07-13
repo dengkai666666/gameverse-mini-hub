@@ -1,7 +1,7 @@
 /* Shared layout for standalone game pages */
 
 .game-page-main {
-    padding: 4.5rem 5%;
+    padding: 2rem 5% 3rem;
     max-width: 1200px;
     margin: 0 auto;
 }
